@@ -93,8 +93,8 @@ fun PrecoverApp() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, name = "List - Light")
-@Preview(showBackground = true, name = "List - Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+//@Preview(showBackground = true, name = "List - Light")
+//@Preview(showBackground = true, name = "List - Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun ListScreen(onItemClick: (Int) -> Unit = {}, onSettingsClick: () -> Unit = {}) {
     Scaffold(
@@ -122,8 +122,8 @@ fun ListScreen(onItemClick: (Int) -> Unit = {}, onSettingsClick: () -> Unit = {}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, name = "Detail - Light")
-@Preview(fontScale = 1.5f, name = "Detail - Large Font")
+//@Preview(showBackground = true, name = "Detail - Light")
+//@Preview(fontScale = 1.5f, name = "Detail - Large Font")
 @Composable
 fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
     Scaffold(
@@ -145,8 +145,8 @@ fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, name = "Settings - Light")
-@Preview(showBackground = true, name = "Settings - Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+//@Preview(showBackground = true, name = "Settings - Light")
+//@Preview(showBackground = true, name = "Settings - Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun SettingsScreen() {
     Scaffold(

@@ -6,19 +6,13 @@ import io.github.donald_okara.precover.core.models.Severity
 import io.github.donald_okara.precover.rules.engine.PrecoverRule
 import io.github.donald_okara.precover.rules.engine.RuleWeight
 
-class ScreenSizeRule : PrecoverRule {
-    override val name: String = "Screen Size Coverage"
-    override val weight: RuleWeight = RuleWeight.MEDIUM
+class NoPreviewRule : PrecoverRule {
+    override val name: String = "Preview Presence"
+    override val weight: RuleWeight = RuleWeight.MANDATORY
 
     override fun evaluate(composable: ComposableMetadata): List<RuleViolation> {
-        if (composable.previews.isEmpty()) return emptyList()
-
-        val hasExplicitSize = composable.previews.any { 
-            it.device != null || it.widthDp != null || it.heightDp != null 
-        }
-        
-        return if (!hasExplicitSize) {
-            listOf(RuleViolation(name, "Missing explicit screen size or device preview", Severity.INFO))
+        return if (composable.previews.isEmpty()) {
+            listOf(RuleViolation(name, "Composable has no @Preview annotations", Severity.ERROR))
         } else {
             emptyList()
         }
