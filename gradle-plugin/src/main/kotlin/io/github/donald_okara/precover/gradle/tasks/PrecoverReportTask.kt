@@ -1,0 +1,56 @@
+package io.github.donald_okara.precover.gradle.tasks
+
+import io.github.donald_okara.precover.core.models.ComposableMetadata
+import io.github.donald_okara.precover.rules.engine.RuleEngine
+import io.github.donald_okara.precover.rules.report.HtmlReporter
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.builtins.ListSerializer
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
+import java.io.File
+
+abstract class PrecoverReportTask : DefaultTask() {
+
+    @get:InputFile
+    abstract val metadataFile: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+
+    @get:Input
+    abstract val htmlEnabled: Property<Boolean>
+
+    @get:Input
+    abstract val jsonEnabled: Property<Boolean>
+
+    @TaskAction
+    fun run() {
+        val json = Json { ignoreUnknownKeys = true }
+        val metadataContent = metadataFile.get().asFile.readText()
+        val metadata = json.decodeFromString(ListSerializer(ComposableMetadata.serializer()), metadataContent)
+
+        val engine = RuleEngine()
+        val report = engine.analyze(metadata)
+
+        val outDir = outputDirectory.get().asFile
+        if (!outDir.exists()) outDir.mkdirs()
+
+        if (jsonEnabled.get()) {
+            val reportJson = Json { prettyPrint = true }
+            val encoded = reportJson.encodeToString(io.github.donald_okara.precover.core.models.CoverageReport.serializer(), report)
+            File(outDir, "precover-report.json").writeText(encoded)
+        }
+
+        if (htmlEnabled.get()) {
+            val htmlReporter = HtmlReporter()
+            val html = htmlReporter.generate(report)
+            File(outDir, "precover-report.html").writeText(html)
+        }
+
+        logger.lifecycle("Precover: Analysis complete. Overall score: ${"%.1f".format(report.overallScore)}%")
+        logger.lifecycle("Precover: Reports generated in ${outDir.absolutePath}")
+    }
+}

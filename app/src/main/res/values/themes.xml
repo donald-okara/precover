@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.Precover" parent="Theme.MaterialComponents.Light" />
+</resources>
