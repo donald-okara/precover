@@ -42,8 +42,10 @@ moshiKotlin = "1.15.2"
 moshiKotlinCodegen = "1.15.2"
 datastorePreferences = "1.1.7"
 material = "1.13.0"
+uiToolingPreviewJvmstubs = "1.11.3"
 
 [libraries]
+androidx-compose-ui-tooling-preview-jvmstubs = { module = "androidx.compose.ui:ui-tooling-preview-jvmstubs", version.ref = "uiToolingPreviewJvmstubs" }
 google-devtools-ksp-api = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "googleDevtoolsKsp" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

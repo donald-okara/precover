@@ -1,1 +1,4 @@
-plan.md
+
+#Exclude everything except skills
+*
+!review.md

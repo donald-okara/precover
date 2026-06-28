@@ -4,12 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -20,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -90,71 +84,4 @@ fun PrecoverApp() {
             }
         }
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, name = "List - Light")
-@Preview(showBackground = true, name = "List - Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun ListScreen(onItemClick: (Int) -> Unit = {}, onSettingsClick: () -> Unit = {}) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Precover Items") },
-                actions = {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Rounded.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        LazyColumn(Modifier.padding(padding)) {
-            items((1..20).toList()) { id ->
-                ListItem(
-                    headlineContent = { Text("Item $id") },
-                    supportingContent = { Text("Description for item $id") },
-                    modifier = Modifier.clickable { onItemClick(id) }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, name = "Detail - Light")
-@Preview(fontScale = 1.5f, name = "Detail - Large Font")
-@Composable
-fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
-    Scaffold(
-        topBar = { TopAppBar(title = { Text(item.title) }) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("Details for ${item.title}", style = MaterialTheme.typography.headlineMedium)
-            Spacer(Modifier.height(16.dp))
-            Text("This is the detailed view of item ${item.id}. It is shown in the detail pane on large screens or as a full screen on mobile.")
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showBackground = true, name = "Settings - Light")
-@Preview(showBackground = true, name = "Settings - Dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun SettingsScreen() {
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Settings") }) }
-    ) { padding ->
-        Column(Modifier.padding(padding).padding(16.dp)) {
-            Text("Settings Content", style = MaterialTheme.typography.titleLarge)
-            Text("Configure your app here.")
-        }
-    }
 }

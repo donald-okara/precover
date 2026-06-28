@@ -33,13 +33,26 @@ class HtmlReporter {
                 </div>
                 
                 <h2>Component Details</h2>
-                ${report.components.joinToString("") { component ->
+                ${report.components.filter { it.isComponent }.joinToString("") { component ->
                     val statusClass = if (component.score > 80) "good" else if (component.score > 50) "warn" else "bad"
                     """
                     <div class="component $statusClass">
-                        <h3>${component.name} <small>(${component.packageName})</small> - ${"%.1f".format(component.score)}%</h3>
+                        <h3>${escapeHtml(component.name)} <small>(${escapeHtml(component.packageName)})</small> - ${"%.1f".format(component.score)}%</h3>
                         ${if (component.violations.isEmpty()) "<p>No violations found.</p>" else component.violations.joinToString("") { 
-                            """<div class="violation"><span class="${it.severity}">${it.severity}:</span> ${it.message}</div>"""
+                            """<div class="violation"><span class="${it.severity}">${it.severity}:</span> ${escapeHtml(it.message)}</div>"""
+                        }}
+                    </div>
+                    """
+                }}
+
+                ${if (report.components.any { !it.isComponent }) "<h2>Preview Accessory Validation</h2>" else ""}
+                ${report.components.filter { !it.isComponent }.joinToString("") { component ->
+                    val statusClass = if (component.score >= 100) "good" else "bad"
+                    """
+                    <div class="component $statusClass">
+                        <h3>${escapeHtml(component.name)} <small>(${escapeHtml(component.packageName)})</small> - ${if (component.score >= 100) "Valid" else "Invalid"}</h3>
+                        ${if (component.violations.isEmpty()) "<p>No configuration issues found.</p>" else component.violations.joinToString("") {
+                            """<div class="violation"><span class="${it.severity}">${it.severity}:</span> ${escapeHtml(it.message)}</div>"""
                         }}
                     </div>
                     """
@@ -48,4 +61,12 @@ class HtmlReporter {
             </html>
         """.trimIndent()
     }
+
+    private fun escapeHtml(value: String): String =
+        value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
 }
