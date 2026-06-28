@@ -11,7 +11,9 @@ data class ComposableMetadata(
     val parameters: List<ParameterMetadata>,
     val previews: List<PreviewMetadata>,
     val linkTargets: List<String> = emptyList(),
-    val annotations: List<String> = emptyList()
+    val annotations: List<String> = emptyList(),
+    val isComponent: Boolean = true,
+    val hasDirectPreviews: Boolean = false
 )
 
 @Serializable
@@ -42,5 +44,6 @@ data class PreviewMetadata(
     val showSystemUi: Boolean? = null,
     val device: String? = null,
     val uiMode: Int? = null,
-    val wallpaper: Int? = null
+    val wallpaper: Int? = null,
+    val isLink: Boolean = false
 )

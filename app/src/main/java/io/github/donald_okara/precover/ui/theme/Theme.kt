@@ -1,15 +1,21 @@
 package io.github.donald_okara.precover.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import io.github.donald_okara.precover.core.annotations.PrecoverLink
+
+@Target(AnnotationTarget.FUNCTION)
+annotation class ThemeMarker
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -33,6 +39,7 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+@ThemeMarker
 @Composable
 fun PrecoverTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -56,3 +63,15 @@ fun PrecoverTheme(
         content = content
     )
 }
+
+@PreviewLightDark
+@PrecoverLink(target = ThemeMarker::class)
+@Composable
+fun PreviewContent() {
+    PrecoverTheme {
+        Surface {
+            Text(text = "Theme Preview Content")
+        }
+    }
+}
+

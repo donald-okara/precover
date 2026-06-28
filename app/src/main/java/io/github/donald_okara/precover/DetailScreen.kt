@@ -7,7 +7,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import io.github.donald_okara.precover.core.annotations.PrecoverLink
+import io.github.donald_okara.precover.ui.theme.PrecoverTheme
 
 @Target(AnnotationTarget.FUNCTION)
 annotation class DetailScreenMarker
@@ -15,6 +17,7 @@ annotation class DetailScreenMarker
 @DetailScreenMarker
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@PrecoverLink
 fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(item.title) }) }
@@ -42,17 +45,13 @@ fun MyDetailPreview() {
 }
 
 @Preview(
-    showBackground = true, fontScale = 1.2f
+    fontScale = 1.2f
 )
+@PreviewLightDark
 @PrecoverLink(target = DetailScreenMarker::class , name = "Detail - Via NavKey")
 @Composable
 fun MyAdvancedDetailPreview() {
-    DetailScreen()
-}
-
-@PrecoverLink("DetailScreen", name = "Detail - Via Marker")
-@Preview(name = "Detail - Via Marker")
-@Composable
-fun MyDetailByNamePreview() {
-    DetailScreen()
+    PrecoverTheme{
+        DetailScreen()
+    }
 }

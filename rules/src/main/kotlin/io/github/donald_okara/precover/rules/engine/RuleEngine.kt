@@ -6,6 +6,7 @@ import io.github.donald_okara.precover.rules.definitions.*
 class RuleEngine(
     private val rules: List<PrecoverRule> = listOf(
         NoPreviewRule(),
+        PrecoverLinkUsageRule(),
         ThemeRule(),
         FontScaleRule(),
         ScreenSizeRule()
@@ -13,30 +14,38 @@ class RuleEngine(
     private val overrides: Map<String, RuleOverride> = emptyMap()
 ) {
     fun analyze(metadata: List<ComposableMetadata>): CoverageReport {
-        val targetComposables = metadata.filter { it.functionName.endsWith("Preview").not() }
-
         val activeRules = rules.filter { rule ->
             overrides[rule.name]?.enabled ?: true
         }
 
-        val componentCoverages = targetComposables.map { composable ->
-            val ruleViolations = activeRules.associateWith { it.evaluate(composable) }
+        val componentCoverages = metadata.map { composable ->
+            val applicableRules = if (composable.isComponent) {
+                // Components get all rules. PrecoverLinkUsageRule now handles checking
+                // if the component itself was erroneously annotated with @PrecoverLink.
+                activeRules
+            } else {
+                // Accessories only get the link usage rule
+                activeRules.filter { it is PrecoverLinkUsageRule }
+            }
+
+            val ruleViolations = applicableRules.associateWith { it.evaluate(composable) }
             
             // If any MANDATORY rule has an ERROR, score is 0
-            val hasMandatoryError = activeRules.any { rule ->
+            val hasMandatoryError = applicableRules.any { rule ->
                 val weight = overrides[rule.name]?.weight ?: rule.weight
                 weight == RuleWeight.MANDATORY && 
                 ruleViolations[rule]?.any { it.severity == Severity.ERROR } == true
             }
 
             // Also treat empty previews as a hard 0 regardless of enabled rules
-            val score = if (hasMandatoryError || composable.previews.isEmpty()) {
+            // (Only for components - accessories are checked by PrecoverLinkUsageRule)
+            val score = if (hasMandatoryError || (composable.isComponent && composable.previews.isEmpty())) {
                 0f
             } else {
                 var earnedPoints = 0f
                 var totalWeight = 0f
 
-                activeRules.forEach { rule ->
+                applicableRules.forEach { rule ->
                     val violations = ruleViolations[rule] ?: emptyList()
                     val weight = (overrides[rule.name]?.weight ?: rule.weight).value.toFloat()
                     totalWeight += weight
@@ -60,11 +69,15 @@ class RuleEngine(
                 name = composable.functionName,
                 packageName = composable.packageName,
                 score = score,
-                violations = ruleViolations.values.flatten()
+                violations = ruleViolations.values.flatten(),
+                isComponent = composable.isComponent
             )
         }
 
-        val overallScore = if (componentCoverages.isEmpty()) 0f else componentCoverages.map { it.score }.average().toFloat()
+        val overallScore = if (componentCoverages.isEmpty()) 0f else {
+            val componentScores = componentCoverages.filter { it.isComponent }.map { it.score }
+            if (componentScores.isEmpty()) 0f else componentScores.average().toFloat()
+        }
 
         return CoverageReport(
             overallScore = overallScore,

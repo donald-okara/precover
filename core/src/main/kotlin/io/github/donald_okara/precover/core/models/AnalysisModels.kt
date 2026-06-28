@@ -13,7 +13,8 @@ data class ComponentCoverage(
     val name: String,
     val packageName: String,
     val score: Float,
-    val violations: List<RuleViolation>
+    val violations: List<RuleViolation>,
+    val isComponent: Boolean = true
 )
 
 @Serializable

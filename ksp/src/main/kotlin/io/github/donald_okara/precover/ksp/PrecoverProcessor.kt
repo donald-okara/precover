@@ -35,19 +35,17 @@ class PrecoverProcessor(
 
         // 1. Identify "Base" functions (actual components)
         val baseFunctions = metadataList.filter { 
-            it.previews.isEmpty() && 
-            it.linkTargets.isEmpty() && 
             !it.functionName.endsWith("Preview") &&
-            !it.functionName.contains("_")
+            !it.functionName.contains("_") &&
+            it.linkTargets.isEmpty()
         }
 
-        // 2. Identify "Preview" functions
+        // 2. Identify "Preview" functions (helpers/accessories)
         val previewFunctions = metadataList.filter { 
-            it.previews.isNotEmpty() || 
-            it.linkTargets.isNotEmpty() || 
-            it.functionName.endsWith("Preview") ||
-            it.functionName.contains("_")
-        }
+            it.functionName.endsWith("Preview") || 
+            it.functionName.contains("_") || 
+            it.linkTargets.isNotEmpty()
+        }.map { it.copy(isComponent = false) }
 
         // 3. Build a map of potential function calls from preview functions
         val previewBodyCalls = previewFunctions.associate { preview ->
@@ -104,8 +102,15 @@ class PrecoverProcessor(
 
         if (finalMetadata.isEmpty()) return
 
-        val json = Json { prettyPrint = true }
-        val encoded = json.encodeToString(ListSerializer(ComposableMetadata.serializer()), finalMetadata)
+        // 5. Include linked previews for linting/validation
+        val linkedPreviews = previewFunctions.filter { it.linkTargets.isNotEmpty() }
+        val allReportMetadata = finalMetadata + linkedPreviews
+
+        val json = Json { 
+            prettyPrint = true
+            encodeDefaults = true
+        }
+        val encoded = json.encodeToString(ListSerializer(ComposableMetadata.serializer()), allReportMetadata)
 
         try {
             val file = codeGenerator.createNewFile(
@@ -212,7 +217,8 @@ class PrecoverProcessor(
             parameters = parameters,
             previews = previews,
             linkTargets = linkTargets,
-            annotations = annotations
+            annotations = annotations,
+            hasDirectPreviews = previews.any { !it.isLink }
         )
     }
 
@@ -290,6 +296,8 @@ class PrecoverProcessor(
     }
 
     private fun parsePreviewAnnotation(annotation: KSAnnotation): PreviewMetadata {
+        val qualifiedName = annotation.annotationType.resolve().declaration.qualifiedName?.asString()
+        val isLink = qualifiedName == "io.github.donald_okara.precover.core.annotations.PrecoverLink"
         val args = annotation.arguments.associate { it.name?.asString() to it.value }
         
         return PreviewMetadata(
@@ -305,7 +313,8 @@ class PrecoverProcessor(
             showSystemUi = args["showSystemUi"] as? Boolean,
             device = args["device"] as? String,
             uiMode = args["uiMode"] as? Int,
-            wallpaper = args["wallpaper"] as? Int
+            wallpaper = args["wallpaper"] as? Int,
+            isLink = isLink
         )
     }
 }

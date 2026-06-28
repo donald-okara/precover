@@ -44,7 +44,10 @@ abstract class PrecoverReportTask : DefaultTask() {
         if (!outDir.exists()) outDir.mkdirs()
 
         if (jsonEnabled.get()) {
-            val reportJson = Json { prettyPrint = true }
+            val reportJson = Json { 
+                prettyPrint = true
+                encodeDefaults = true
+            }
             val encoded = reportJson.encodeToString(io.github.donald_okara.precover.core.models.CoverageReport.serializer(), report)
             File(outDir, "precover-report.json").writeText(encoded)
         }
