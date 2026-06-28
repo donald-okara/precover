@@ -17,7 +17,6 @@ annotation class DetailScreenMarker
 @DetailScreenMarker
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@PrecoverLink
 fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
     Scaffold(
         topBar = { TopAppBar(title = { Text(item.title) }) }
@@ -39,6 +38,7 @@ fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
 
 @Preview(showBackground = true, name = "Detail - Light")
 @Preview(fontScale = 1.5f, name = "Detail - Large Font")
+@PrecoverLink(target = DetailScreenMarker::class)
 @Composable
 fun MyDetailPreview() {
     DetailScreen()

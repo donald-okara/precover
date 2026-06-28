@@ -62,7 +62,7 @@ class RuleEngine(
                     earnedPoints += weight * ruleCompletion
                 }
 
-                if (totalWeight > 0) (earnedPoints / totalWeight) * 100f else 0f
+                if (totalWeight > 0) (earnedPoints / totalWeight) * 100f else 100f
             }
 
             ComponentCoverage(

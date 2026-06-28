@@ -6,6 +6,12 @@ import io.github.donald_okara.precover.core.models.Severity
 import io.github.donald_okara.precover.rules.engine.PrecoverRule
 import io.github.donald_okara.precover.rules.engine.RuleWeight
 
+/**
+ * Validates that a component is previewed with different font scales to ensure accessibility.
+ *
+ * This rule checks if there are at least two different font scales used across all
+ * previews for a component.
+ */
 class FontScaleRule : PrecoverRule {
     override val name: String = "Font Scale Coverage"
     override val weight: RuleWeight = RuleWeight.MEDIUM

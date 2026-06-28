@@ -42,8 +42,10 @@ fun SettingsPreview() { ... }
 ```
 
 ## Configuration Parameters
-`@PrecoverLink` supports all standard `@Preview` parameters, allowing you to configure the preview environment directly:
-- `name`: Name shown in reports.
-- `fontScale`: Test accessibility (e.g., `1.5f`).
-- `uiMode`: Test Night Mode (e.g., `Configuration.UI_MODE_NIGHT_YES`).
-- `device`, `locale`, `showBackground`, etc.
+`@PrecoverLink` supports the following parameters to customize attribution:
+- `value`: The string name of the target `@Composable` function.
+- `target`: A `KClass` for type-safe linkage (e.g., a NavKey or custom Marker annotation).
+- `name`: The semantic name of the specific scenario or state for Precover reports.
+- `group`: A categorization group for organizing previews in reports.
+
+> **Note**: Environmental settings like `fontScale`, `uiMode`, `device`, etc., should still be configured using the standard `@Preview` annotation. Precover analyzes those `@Preview` settings once the link is established.

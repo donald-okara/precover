@@ -17,6 +17,7 @@ abstract class PrecoverExtension {
 
 abstract class RuleConfig @Inject constructor(@get:Input val name: String) {
 
+    @get:Input
     abstract val enabled: Property<Boolean>
 
     @get:Input

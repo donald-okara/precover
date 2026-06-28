@@ -13,7 +13,7 @@ version = "1.0.0"
 dependencies {
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
-    compileOnly("androidx.compose.ui:ui-tooling-preview-jvmstubs:1.10.2")
+    compileOnly(libs.androidx.compose.ui.tooling.preview.jvmstubs)
 }
 
 extensions.configure<PublishingExtension> {

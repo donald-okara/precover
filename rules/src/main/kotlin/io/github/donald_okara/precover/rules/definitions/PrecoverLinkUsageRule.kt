@@ -1,5 +1,6 @@
 package io.github.donald_okara.precover.rules.definitions
 
+import io.github.donald_okara.precover.core.annotations.PrecoverLink
 import io.github.donald_okara.precover.core.models.ComposableMetadata
 import io.github.donald_okara.precover.core.models.RuleViolation
 import io.github.donald_okara.precover.core.models.Severity
@@ -19,7 +20,7 @@ class PrecoverLinkUsageRule : PrecoverRule {
 
     override fun evaluate(composable: ComposableMetadata): List<RuleViolation> {
         val hasPrecoverLink = composable.annotations.any { 
-            it == "io.github.donald_okara.precover.core.annotations.PrecoverLink" 
+            it == PrecoverLink::class.qualifiedName
         }
 
         if (hasPrecoverLink && !composable.hasDirectPreviews) {
