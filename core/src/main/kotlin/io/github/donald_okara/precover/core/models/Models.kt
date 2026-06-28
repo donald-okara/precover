@@ -9,7 +9,9 @@ data class ComposableMetadata(
     val functionName: String,
     val isInternal: Boolean,
     val parameters: List<ParameterMetadata>,
-    val previews: List<PreviewMetadata>
+    val previews: List<PreviewMetadata>,
+    val linkTargets: List<String> = emptyList(),
+    val annotations: List<String> = emptyList()
 )
 
 @Serializable

@@ -6,6 +6,12 @@ import io.github.donald_okara.precover.core.models.Severity
 import io.github.donald_okara.precover.rules.engine.PrecoverRule
 import io.github.donald_okara.precover.rules.engine.RuleWeight
 
+/**
+ * Validates that a component is previewed on different screen sizes or devices.
+ *
+ * This rule looks for explicit `device`, `widthDp`, or `heightDp` parameters
+ * in the preview metadata to ensure adaptive layouts are being verified.
+ */
 class ScreenSizeRule : PrecoverRule {
     override val name: String = "Screen Size Coverage"
     override val weight: RuleWeight = RuleWeight.MEDIUM

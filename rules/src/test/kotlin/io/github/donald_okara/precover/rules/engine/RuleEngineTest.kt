@@ -59,5 +59,10 @@ class RuleEngineTest {
         
         assertEquals(1, report.components.size)
         assertEquals(0f, report.components[0].score, 0.1f)
+        assertTrue(
+            report.components[0].violations.any {
+                it.ruleName == "Preview Presence" && it.severity == Severity.ERROR
+            }
+        )
     }
 }

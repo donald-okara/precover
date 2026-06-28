@@ -29,7 +29,8 @@ class RuleEngine(
                 ruleViolations[rule]?.any { it.severity == Severity.ERROR } == true
             }
 
-            val score = if (hasMandatoryError) {
+            // Also treat empty previews as a hard 0 regardless of enabled rules
+            val score = if (hasMandatoryError || composable.previews.isEmpty()) {
                 0f
             } else {
                 var earnedPoints = 0f

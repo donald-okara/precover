@@ -5,6 +5,7 @@ import com.google.devtools.ksp.symbol.*
 import io.github.donald_okara.precover.core.models.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.ListSerializer
+import java.io.File
 
 class PrecoverProcessor(
     private val codeGenerator: CodeGenerator,
@@ -14,8 +15,10 @@ class PrecoverProcessor(
 
     private val metadataList = mutableListOf<ComposableMetadata>()
     private val sources = mutableListOf<KSFile>()
+    private var resolver: Resolver? = null
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        this.resolver = resolver
         val composables = resolver.getSymbolsWithAnnotation("androidx.compose.runtime.Composable")
             .filterIsInstance<KSFunctionDeclaration>()
 
@@ -30,8 +33,79 @@ class PrecoverProcessor(
     override fun finish() {
         if (metadataList.isEmpty()) return
 
+        // 1. Identify "Base" functions (actual components)
+        val baseFunctions = metadataList.filter { 
+            it.previews.isEmpty() && 
+            it.linkTargets.isEmpty() && 
+            !it.functionName.endsWith("Preview") &&
+            !it.functionName.contains("_")
+        }
+
+        // 2. Identify "Preview" functions
+        val previewFunctions = metadataList.filter { 
+            it.previews.isNotEmpty() || 
+            it.linkTargets.isNotEmpty() || 
+            it.functionName.endsWith("Preview") ||
+            it.functionName.contains("_")
+        }
+
+        // 3. Build a map of potential function calls from preview functions
+        val previewBodyCalls = previewFunctions.associate { preview ->
+            val qualifiedName = "${preview.packageName}.${preview.functionName}"
+            qualifiedName to inferCallsFromBody(preview)
+        }
+
+        val finalMetadata = baseFunctions.map { base ->
+            val baseQualifiedName = "${base.packageName}.${base.functionName}"
+
+            // Find any preview functions that should be attributed to this base function
+            val attributedPreviews = previewFunctions
+                .filter { previewFunc ->
+                    val previewQualifiedName = "${previewFunc.packageName}.${previewFunc.functionName}"
+                    
+                    // 1. Explicit Link (String name or Full Qualified Name)
+                    val hasExplicitLink = previewFunc.linkTargets.any { target ->
+                        target == baseQualifiedName || 
+                        target == base.functionName ||
+                        // 2. Type-Safe Link (NavKey or Marker Annotation)
+                        base.parameters.any { it.type == target } ||
+                        base.annotations.contains(target)
+                    }
+
+                    if (hasExplicitLink) return@filter true
+                    
+                    // 3. Smart Body Analysis (Inferred Call)
+                    val callsBase = previewBodyCalls[previewQualifiedName]?.contains(base.functionName) == true
+                    if (callsBase) return@filter true
+
+                    // 4. Naming Convention (fallback)
+                    (previewFunc.functionName == "${base.functionName}Preview" || 
+                     previewFunc.functionName.startsWith("${base.functionName}_")) && 
+                     previewFunc.packageName == base.packageName && 
+                     previewFunc.fileName == base.fileName
+                }
+                .flatMap { previewFunc ->
+                    // Semantic Naming Enhancement: 
+                    // If the preview is named BaseName_State, extract "State" as the display name
+                    if (previewFunc.functionName.contains("_") && previewFunc.previews.all { it.name.isNullOrBlank() }) {
+                        val state = previewFunc.functionName.substringAfter("_").removeSuffix("Preview")
+                        previewFunc.previews.map { it.copy(name = state) }
+                    } else {
+                        previewFunc.previews
+                    }
+                }
+
+            if (attributedPreviews.isEmpty()) {
+                base
+            } else {
+                base.copy(previews = base.previews + attributedPreviews)
+            }
+        }
+
+        if (finalMetadata.isEmpty()) return
+
         val json = Json { prettyPrint = true }
-        val encoded = json.encodeToString(ListSerializer(ComposableMetadata.serializer()), metadataList)
+        val encoded = json.encodeToString(ListSerializer(ComposableMetadata.serializer()), finalMetadata)
 
         try {
             val file = codeGenerator.createNewFile(
@@ -46,6 +120,58 @@ class PrecoverProcessor(
         } catch (e: Exception) {
             logger.error("Precover: Failed to write metadata: ${e.message}")
         }
+    }
+
+    private fun inferCallsFromBody(metadata: ComposableMetadata): Set<String> {
+        val symbols = resolver?.getSymbolsWithAnnotation("androidx.compose.runtime.Composable")
+            ?.filterIsInstance<KSFunctionDeclaration>()
+            ?.filter { it.simpleName.asString() == metadata.functionName && it.packageName.asString() == metadata.packageName }
+            ?.toList() ?: emptyList()
+
+        val function = symbols.firstOrNull() ?: return emptySet()
+        val location = function.location as? FileLocation ?: return emptySet()
+        val file = File(location.filePath)
+        if (!file.exists()) return emptySet()
+
+        val lines = file.readLines()
+        val startLine = location.lineNumber - 1
+        if (startLine >= lines.size) return emptySet()
+
+        // Very basic body extraction: look for the first '{' and then match with '}'
+        val bodyContent = StringBuilder()
+        var braceCount = 0
+        var foundStart = false
+
+        for (i in startLine until lines.size) {
+            val line = lines[i]
+            for (char in line) {
+                if (char == '{') {
+                    braceCount++
+                    foundStart = true
+                } else if (char == '}') {
+                    braceCount--
+                }
+
+                if (foundStart) {
+                    bodyContent.append(char)
+                }
+
+                if (foundStart && braceCount == 0) {
+                    break
+                }
+            }
+            if (foundStart && braceCount == 0) break
+            bodyContent.append("\n")
+        }
+
+        val body = bodyContent.toString()
+        
+        // Find potential composable calls (simple regex for PascalCase or camelCase followed by parenthesis)
+        val regex = Regex("([A-Z][a-zA-Z0-9_]*|(?<![a-zA-Z0-9_])[a-z][a-zA-Z0-9_]*)\\s*\\(")
+        return regex.findAll(body)
+            .map { it.groupValues[1] }
+            .filter { it != metadata.functionName } // Avoid self-reference
+            .toSet()
     }
 
     private fun extractMetadata(function: KSFunctionDeclaration): ComposableMetadata {
@@ -75,6 +201,8 @@ class PrecoverProcessor(
         }
 
         val previews = extractPreviews(function)
+        val linkTargets = extractLinkTargets(function)
+        val annotations = function.annotations.mapNotNull { it.annotationType.resolve().declaration.qualifiedName?.asString() }.toList()
 
         return ComposableMetadata(
             packageName = packageName,
@@ -82,13 +210,60 @@ class PrecoverProcessor(
             functionName = functionName,
             isInternal = isInternal,
             parameters = parameters,
-            previews = previews
+            previews = previews,
+            linkTargets = linkTargets,
+            annotations = annotations
         )
+    }
+
+    private fun extractLinkTargets(annotated: KSAnnotated, visited: MutableSet<String> = mutableSetOf()): List<String> {
+        val directLinks = annotated.annotations
+            .filter { it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink" }
+            .mapNotNull { annotation ->
+                val targetType = annotation.arguments.find { it.name?.asString() == "target" }?.value as? KSType
+                val targetName = annotation.arguments.find { it.name?.asString() == "value" }?.value as? String
+                
+                if (!targetName.isNullOrBlank()) {
+                    targetName
+                } else if (targetType != null && targetType.declaration.qualifiedName?.asString() != "kotlin.Unit") {
+                    targetType.declaration.qualifiedName?.asString()
+                } else {
+                    null
+                }
+            }
+            .toList()
+
+        val indirectLinks = annotated.annotations
+            .filter { 
+                val qualifiedName = it.annotationType.resolve().declaration.qualifiedName?.asString()
+                qualifiedName != null &&
+                qualifiedName != "androidx.compose.runtime.Composable" && 
+                qualifiedName != "androidx.compose.ui.tooling.preview.Preview" &&
+                qualifiedName != "io.github.donald_okara.precover.core.annotations.PrecoverLink" &&
+                !visited.contains(qualifiedName)
+            }
+            .flatMap { annotation ->
+                val declaration = annotation.annotationType.resolve().declaration
+                val qualifiedName = declaration.qualifiedName?.asString()
+                if (qualifiedName != null && declaration is KSClassDeclaration && declaration.classKind == ClassKind.ANNOTATION_CLASS) {
+                    visited.add(qualifiedName)
+                    extractLinkTargets(declaration, visited)
+                } else {
+                    emptyList()
+                }
+            }
+            .toList()
+
+        return (directLinks + indirectLinks).distinct()
     }
 
     private fun extractPreviews(annotated: KSAnnotated, visited: MutableSet<String> = mutableSetOf()): List<PreviewMetadata> {
         val directPreviews = annotated.annotations
-            .filter { it.annotationType.resolve().declaration.qualifiedName?.asString() == "androidx.compose.ui.tooling.preview.Preview" }
+            .filter { 
+                val name = it.annotationType.resolve().declaration.qualifiedName?.asString()
+                name == "androidx.compose.ui.tooling.preview.Preview" || 
+                name == "io.github.donald_okara.precover.core.annotations.PrecoverLink"
+            }
             .map { parsePreviewAnnotation(it) }
 
         val indirectPreviews = annotated.annotations
@@ -97,6 +272,7 @@ class PrecoverProcessor(
                 qualifiedName != null &&
                 qualifiedName != "androidx.compose.runtime.Composable" && 
                 qualifiedName != "androidx.compose.ui.tooling.preview.Preview" &&
+                qualifiedName != "io.github.donald_okara.precover.core.annotations.PrecoverLink" &&
                 !visited.contains(qualifiedName)
             }
             .flatMap { annotation ->

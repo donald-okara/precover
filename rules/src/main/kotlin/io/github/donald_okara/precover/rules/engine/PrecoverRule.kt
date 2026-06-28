@@ -5,20 +5,45 @@ import io.github.donald_okara.precover.core.models.RuleViolation
 
 import java.io.Serializable
 
+/**
+ * Defines the importance of a rule in the overall coverage score calculation.
+ */
 enum class RuleWeight(val value: Int) : Serializable {
+    /** Minor suggestions, low impact on score. */
     LOW(1),
+    /** Standard checks. */
     MEDIUM(2),
+    /** Important coverage requirements. */
     HIGH(3),
+    /** Critical checks. If a mandatory rule fails with an ERROR, the component score drops to 0. */
     MANDATORY(5)
 }
 
+/**
+ * Configuration override for a rule, typically provided via the Gradle extension.
+ */
 data class RuleOverride(
     val enabled: Boolean = true,
     val weight: RuleWeight? = null
 ) : Serializable
 
+/**
+ * Base interface for all Precover coverage rules.
+ *
+ * Implement this interface to add new static analysis checks for Compose Previews.
+ */
 interface PrecoverRule {
+    /** The unique display name of the rule. */
     val name: String
+
+    /** The default weight of the rule if not overridden by the user. */
     val weight: RuleWeight get() = RuleWeight.MEDIUM
+
+    /**
+     * Evaluates a single composable component against this rule.
+     *
+     * @param composable The metadata of the component to analyze, including its extracted previews.
+     * @return A list of [RuleViolation]s found. Return an empty list if the rule passes.
+     */
     fun evaluate(composable: ComposableMetadata): List<RuleViolation>
 }

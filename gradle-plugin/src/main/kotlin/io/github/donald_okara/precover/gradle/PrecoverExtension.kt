@@ -15,9 +15,7 @@ abstract class PrecoverExtension {
     abstract val rules: NamedDomainObjectContainer<RuleConfig>
 }
 
-abstract class RuleConfig @Inject constructor(val name: String) {
-    @Input
-    fun getName(): String = name
+abstract class RuleConfig @Inject constructor(@get:Input val name: String) {
 
     abstract val enabled: Property<Boolean>
 
