@@ -45,4 +45,3 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
         ktlint()
     }
 }
-
