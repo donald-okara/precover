@@ -2,3 +2,4 @@
 #Exclude everything except skills
 *
 !review.md
+!issue.md

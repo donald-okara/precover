@@ -1,6 +1,7 @@
 package io.github.donald_okara.precover.gradle.tasks
 
 import io.github.donald_okara.precover.core.models.ComposableMetadata
+import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleEngine
 import io.github.donald_okara.precover.rules.engine.RuleOverride
 import kotlinx.serialization.json.Json
@@ -21,7 +22,7 @@ abstract class PrecoverCheckTask : DefaultTask() {
     abstract val threshold: Property<Float>
 
     @get:Input
-    abstract val ruleOverrides: MapProperty<String, RuleOverride>
+    abstract val ruleOverrides: MapProperty<RuleType, RuleOverride>
 
     @TaskAction
     fun run() {

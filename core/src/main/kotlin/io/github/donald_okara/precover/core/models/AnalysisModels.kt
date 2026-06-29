@@ -28,3 +28,17 @@ data class RuleViolation(
 enum class Severity {
     INFO, WARNING, ERROR
 }
+
+@Serializable
+data class AggregateCoverageReport(
+    val overallScore: Float,
+    val modules: List<ModuleCoverage>
+)
+
+@Serializable
+data class ModuleCoverage(
+    val modulePath: String,
+    val score: Float,
+    val componentCount: Int,
+    val reportPath: String? = null
+)

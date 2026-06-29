@@ -1,5 +1,6 @@
 package io.github.donald_okara.precover.gradle
 
+import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.gradle.tasks.PrecoverCheckTask
 import io.github.donald_okara.precover.gradle.tasks.PrecoverReportTask
 import io.github.donald_okara.precover.rules.engine.RuleOverride
@@ -16,6 +17,11 @@ class PrecoverPlugin : Plugin<Project> {
         extension.htmlReportEnabled.convention(true)
         extension.jsonReportEnabled.convention(true)
 
+        // Pre-populate all rules for easier configuration
+        RuleType.entries.forEach { type ->
+            extension.rules.maybeCreate(type.name)
+        }
+
         extension.rules.all { rule ->
             rule.enabled.convention(true)
             rule.weight.convention(RuleWeight.MEDIUM)
@@ -31,7 +37,7 @@ class PrecoverPlugin : Plugin<Project> {
 
             val ruleOverridesProvider = project.provider {
                 extension.rules.associate { 
-                    it.name to RuleOverride(it.enabled.get(), it.weight.get())
+                    it.type to RuleOverride(it.enabled.get(), it.weight.get())
                 }
             }
 

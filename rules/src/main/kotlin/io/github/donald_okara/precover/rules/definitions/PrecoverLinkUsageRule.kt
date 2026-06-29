@@ -3,6 +3,7 @@ package io.github.donald_okara.precover.rules.definitions
 import io.github.donald_okara.precover.core.annotations.PrecoverLink
 import io.github.donald_okara.precover.core.models.ComposableMetadata
 import io.github.donald_okara.precover.core.models.RuleViolation
+import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.core.models.Severity
 import io.github.donald_okara.precover.rules.engine.PrecoverRule
 import io.github.donald_okara.precover.rules.engine.RuleWeight
@@ -15,7 +16,7 @@ import io.github.donald_okara.precover.rules.engine.RuleWeight
  * them to a target component.
  */
 class PrecoverLinkUsageRule : PrecoverRule {
-    override val name: String = "PrecoverLink Usage"
+    override val type: RuleType = RuleType.PRECOVER_LINK_USAGE
     override val weight: RuleWeight = RuleWeight.MANDATORY
 
     override fun evaluate(composable: ComposableMetadata): List<RuleViolation> {

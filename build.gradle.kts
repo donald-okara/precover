@@ -1,3 +1,5 @@
+import io.github.donald_okara.precover.gradle.PrecoverRootExtension
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -17,3 +19,11 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization) apply false
     alias(libs.plugins.kotlinJvm) apply false
 }
+
+apply(plugin = "io.github.donald-okara.precover.root")
+
+configure<PrecoverRootExtension> {
+    aggregateCoverageThreshold.set(80f)
+}
+
+

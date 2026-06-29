@@ -2,6 +2,7 @@ package io.github.donald_okara.precover.rules.engine
 
 import io.github.donald_okara.precover.core.models.ComposableMetadata
 import io.github.donald_okara.precover.core.models.RuleViolation
+import io.github.donald_okara.precover.core.models.RuleType
 
 import java.io.Serializable
 
@@ -33,8 +34,11 @@ data class RuleOverride(
  * Implement this interface to add new static analysis checks for Compose Previews.
  */
 interface PrecoverRule {
+    /** The unique type identifier of the rule. */
+    val type: RuleType
+
     /** The unique display name of the rule. */
-    val name: String
+    val name: String get() = type.displayName
 
     /** The default weight of the rule if not overridden by the user. */
     val weight: RuleWeight get() = RuleWeight.MEDIUM

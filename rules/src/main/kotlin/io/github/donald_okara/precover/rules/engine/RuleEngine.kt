@@ -1,6 +1,7 @@
 package io.github.donald_okara.precover.rules.engine
 
 import io.github.donald_okara.precover.core.models.*
+import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.definitions.*
 
 class RuleEngine(
@@ -11,11 +12,11 @@ class RuleEngine(
         FontScaleRule(),
         ScreenSizeRule()
     ),
-    private val overrides: Map<String, RuleOverride> = emptyMap()
+    private val overrides: Map<RuleType, RuleOverride> = emptyMap()
 ) {
     fun analyze(metadata: List<ComposableMetadata>): CoverageReport {
         val activeRules = rules.filter { rule ->
-            overrides[rule.name]?.enabled ?: true
+            overrides[rule.type]?.enabled ?: true
         }
 
         val componentCoverages = metadata.map { composable ->
@@ -32,7 +33,7 @@ class RuleEngine(
             
             // If any MANDATORY rule has an ERROR, score is 0
             val hasMandatoryError = applicableRules.any { rule ->
-                val weight = overrides[rule.name]?.weight ?: rule.weight
+                val weight = overrides[rule.type]?.weight ?: rule.weight
                 weight == RuleWeight.MANDATORY && 
                 ruleViolations[rule]?.any { it.severity == Severity.ERROR } == true
             }
@@ -47,7 +48,7 @@ class RuleEngine(
 
                 applicableRules.forEach { rule ->
                     val violations = ruleViolations[rule] ?: emptyList()
-                    val weight = (overrides[rule.name]?.weight ?: rule.weight).value.toFloat()
+                    val weight = (overrides[rule.type]?.weight ?: rule.weight).value.toFloat()
                     totalWeight += weight
 
                     // Calculate how much this rule passed

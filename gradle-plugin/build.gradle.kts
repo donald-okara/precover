@@ -14,6 +14,10 @@ gradlePlugin {
             id = "io.github.donald-okara.precover"
             implementationClass = "io.github.donald_okara.precover.gradle.PrecoverPlugin"
         }
+        create("precoverRoot") {
+            id = "io.github.donald-okara.precover.root"
+            implementationClass = "io.github.donald_okara.precover.gradle.PrecoverRootPlugin"
+        }
     }
 }
 
@@ -25,4 +29,6 @@ dependencies {
     compileOnly("com.android.tools.build:gradle:8.2.0")
     compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.10")
     compileOnly("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.5")
+
+    testImplementation(libs.junit)
 }

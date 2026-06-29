@@ -1,6 +1,7 @@
 package io.github.donald_okara.precover.gradle.tasks
 
 import io.github.donald_okara.precover.core.models.ComposableMetadata
+import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleEngine
 import io.github.donald_okara.precover.rules.engine.RuleOverride
 import io.github.donald_okara.precover.rules.report.HtmlReporter
@@ -29,7 +30,7 @@ abstract class PrecoverReportTask : DefaultTask() {
     abstract val jsonEnabled: Property<Boolean>
 
     @get:Input
-    abstract val ruleOverrides: MapProperty<String, RuleOverride>
+    abstract val ruleOverrides: MapProperty<RuleType, RuleOverride>
 
     @TaskAction
     fun run() {

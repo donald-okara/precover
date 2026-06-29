@@ -31,14 +31,15 @@ class RuleEngineTest {
         
         // weights:
         // NoPreview: MANDATORY (5) -> Passed (100% of 5)
+        // PrecoverLinkUsage: MANDATORY (5) -> Passed (100% of 5)
         // Theme: HIGH (3) -> WARNING (50% of 3 = 1.5)
         // FontScale: MEDIUM (2) -> INFO (90% of 2 = 1.8)
         // ScreenSize: MEDIUM (2) -> INFO (90% of 2 = 1.8)
-        // Total points: 5 + 1.5 + 1.8 + 1.8 = 10.1
-        // Total weight: 5 + 3 + 2 + 2 = 12
-        // Score: 10.1 / 12 * 100 = 84.16%
+        // Total points: 5 + 5 + 1.5 + 1.8 + 1.8 = 15.1
+        // Total weight: 5 + 5 + 3 + 2 + 2 = 17
+        // Score: 15.1 / 17 * 100 = 88.82%
         
-        assertEquals(84.16f, report.components[0].score, 0.1f)
+        assertEquals(88.82f, report.components[0].score, 0.1f)
     }
 
     @Test
