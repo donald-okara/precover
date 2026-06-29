@@ -7,7 +7,9 @@ import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
 abstract class PrecoverAggregateCheckTask : DefaultTask() {
 
     @get:InputFiles

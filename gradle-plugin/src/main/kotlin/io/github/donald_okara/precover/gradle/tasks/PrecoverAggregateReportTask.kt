@@ -12,6 +12,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.File
 
+@CacheableTask
 abstract class PrecoverAggregateReportTask : DefaultTask() {
 
     @get:InputFiles
