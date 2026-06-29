@@ -22,9 +22,15 @@ plugins {
 }
 
 if (project.findProperty("precover.enabled") != "false") {
-    val configScript = file("gradle/precover-root-config.gradle.kts")
-    if (configScript.exists()) {
-        apply(from = configScript)
+    apply(plugin = "io.github.donald-okara.precover.root")
+    
+    val extension = extensions.getByName("precoverRoot")
+    try {
+        val method = extension::class.java.getMethod("getAggregateCoverageThreshold")
+        val property = method.invoke(extension) as org.gradle.api.provider.Property<Float>
+        property.set(80f)
+    } catch (e: Exception) {
+        // Plugin not built yet
     }
 }
 

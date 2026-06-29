@@ -6,7 +6,17 @@ plugins {
 }
 
 if (project.findProperty("precover.enabled") != "false") {
-    apply(from = "../gradle/precover-app-config.gradle.kts")
+    apply(plugin = "io.github.donald-okara.precover")
+
+    val extension = extensions.getByName("precover")
+    try {
+        val clz = extension::class.java
+        (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
+        (clz.getMethod("getHtmlReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+        (clz.getMethod("getJsonReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+    } catch (e: Exception) {
+        // Plugin not built yet
+    }
 }
 
 android {
