@@ -23,8 +23,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Publish to Maven Local
+        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false --no-daemon
+
       - name: Check Spotless
         run: ./gradlew spotlessCheck --no-daemon
 
       - name: Build and Test
         run: ./gradlew build --no-daemon
+
+      - name: Run Precover Report
+        run: ./gradlew :app:precoverReport --no-daemon

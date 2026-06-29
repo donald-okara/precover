@@ -1,5 +1,3 @@
-import io.github.donald_okara.precover.gradle.PrecoverRootExtension
-
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
@@ -8,7 +6,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("io.github.donald-okara:gradle-plugin:1.0.0")
+        if (project.findProperty("precover.enabled") != "false") {
+            classpath("io.github.donald-okara:gradle-plugin:1.0.0")
+        }
     }
 }
 
@@ -21,7 +21,12 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
-apply(plugin = "io.github.donald-okara.precover.root")
+if (project.findProperty("precover.enabled") != "false") {
+    val configScript = file("gradle/precover-root-config.gradle.kts")
+    if (configScript.exists()) {
+        apply(from = configScript)
+    }
+}
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin {
@@ -41,6 +46,3 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     }
 }
 
-configure<PrecoverRootExtension> {
-    aggregateCoverageThreshold.set(80f)
-}

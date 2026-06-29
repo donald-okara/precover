@@ -1,41 +1,12 @@
-import io.github.donald_okara.precover.rules.engine.RuleWeight
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
-    id("io.github.donald-okara.precover")
 }
 
-precover {
-    coverageThreshold.set(75f)
-    htmlReportEnabled.set(true)
-    jsonReportEnabled.set(true)
-
-    PREVIEW_PRESENCE {
-        enabled.set(true)
-        weight.set(RuleWeight.MANDATORY)
-    }
-
-    THEME_COVERAGE {
-        enabled.set(false) // Disable theme checks just for this module
-    }
-
-    FONT_SCALE_COVERAGE {
-        enabled.set(true)
-        weight.set(RuleWeight.MEDIUM)
-    }
-
-    SCREEN_SIZE_COVERAGE {
-        enabled.set(true)
-        weight.set(RuleWeight.MEDIUM)
-    }
-
-    PRECOVER_LINK_USAGE {
-        enabled.set(true)
-        weight.set(RuleWeight.MANDATORY)
-    }
+if (project.findProperty("precover.enabled") != "false") {
+    apply(from = "../gradle/precover-app-config.gradle.kts")
 }
 
 android {
