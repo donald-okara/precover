@@ -23,7 +23,7 @@ plugins {
 
 if (project.findProperty("precover.enabled") != "false") {
     apply(plugin = "io.github.donald-okara.precover.root")
-    
+
     val extension = extensions.getByName("precoverRoot")
     try {
         val method = extension::class.java.getMethod("getAggregateCoverageThreshold")
