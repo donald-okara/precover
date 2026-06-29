@@ -3,14 +3,14 @@ package io.github.donald_okara.precover.ksp
 import com.google.devtools.ksp.processing.*
 import com.google.devtools.ksp.symbol.*
 import io.github.donald_okara.precover.core.models.*
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import java.io.File
 
 class PrecoverProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
-    private val options: Map<String, String>
+    private val options: Map<String, String>,
 ) : SymbolProcessor {
 
     private val metadataList = mutableListOf<ComposableMetadata>()
@@ -23,16 +23,17 @@ class PrecoverProcessor(
 
         val currentMetadata = composables.map { extractMetadata(it) }.toList()
         metadataList.addAll(currentMetadata)
-        
+
         composables.forEach { function ->
             function.containingFile?.let { file -> sources.add(file) }
             val functionName = function.simpleName.asString()
             val packageName = function.packageName.asString()
             val qualifiedName = "$packageName.$functionName"
-            
+
             // Only infer calls for potential previews
-            if (functionName.endsWith("Preview") || functionName.contains("_") || 
-                function.annotations.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink" }) {
+            if (functionName.endsWith("Preview") || functionName.contains("_") ||
+                function.annotations.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink" }
+            ) {
                 previewBodyCalls[qualifiedName] = inferCallsFromBody(function)
             }
         }
@@ -44,17 +45,17 @@ class PrecoverProcessor(
         if (metadataList.isEmpty()) return
 
         // 1. Identify "Base" functions (actual components)
-        val baseFunctions = metadataList.filter { 
+        val baseFunctions = metadataList.filter {
             !it.functionName.endsWith("Preview") &&
-            !it.functionName.contains("_") &&
-            it.linkTargets.isEmpty()
+                !it.functionName.contains("_") &&
+                it.linkTargets.isEmpty()
         }
 
         // 2. Identify "Preview" functions (helpers/accessories)
-        val previewFunctions = metadataList.filter { 
-            it.functionName.endsWith("Preview") || 
-            it.functionName.contains("_") || 
-            it.linkTargets.isNotEmpty()
+        val previewFunctions = metadataList.filter {
+            it.functionName.endsWith("Preview") ||
+                it.functionName.contains("_") ||
+                it.linkTargets.isNotEmpty()
         }.map { it.copy(isComponent = false) }
 
         val finalMetadata = baseFunctions.map { base ->
@@ -64,31 +65,33 @@ class PrecoverProcessor(
             val attributedPreviews = previewFunctions
                 .filter { previewFunc ->
                     val previewQualifiedName = "${previewFunc.packageName}.${previewFunc.functionName}"
-                    
+
                     // 1. Explicit Link (String name or Full Qualified Name)
                     val hasExplicitLink = previewFunc.linkTargets.any { target ->
-                        target == baseQualifiedName || 
-                        target == base.functionName ||
-                        // 2. Type-Safe Link (NavKey or Marker Annotation)
-                        base.parameters.any { it.type == target } ||
-                        base.annotations.contains(target)
+                        target == baseQualifiedName ||
+                            target == base.functionName ||
+                            // 2. Type-Safe Link (NavKey or Marker Annotation)
+                            base.parameters.any { it.type == target } ||
+                            base.annotations.contains(target)
                     }
 
                     if (hasExplicitLink) return@filter true
-                    
+
                     // 3. Smart Body Analysis (Inferred Call)
                     val callsBase = previewBodyCalls[previewQualifiedName]?.contains(base.functionName) == true &&
-                                    previewFunc.packageName == base.packageName
+                        previewFunc.packageName == base.packageName
                     if (callsBase) return@filter true
 
                     // 4. Naming Convention (fallback)
-                    (previewFunc.functionName == "${base.functionName}Preview" || 
-                     previewFunc.functionName.startsWith("${base.functionName}_")) && 
-                     previewFunc.packageName == base.packageName && 
-                     previewFunc.fileName == base.fileName
+                    (
+                        previewFunc.functionName == "${base.functionName}Preview" ||
+                            previewFunc.functionName.startsWith("${base.functionName}_")
+                        ) &&
+                        previewFunc.packageName == base.packageName &&
+                        previewFunc.fileName == base.fileName
                 }
                 .flatMap { previewFunc ->
-                    // Semantic Naming Enhancement: 
+                    // Semantic Naming Enhancement:
                     // If the preview is named BaseName_State, extract "State" as the display name
                     if (previewFunc.functionName.contains("_") && previewFunc.previews.all { it.name.isNullOrBlank() }) {
                         val state = previewFunc.functionName.substringAfter("_").removeSuffix("Preview")
@@ -111,7 +114,7 @@ class PrecoverProcessor(
         val linkedPreviews = previewFunctions.filter { it.linkTargets.isNotEmpty() }
         val allReportMetadata = finalMetadata + linkedPreviews
 
-        val json = Json { 
+        val json = Json {
             prettyPrint = true
             encodeDefaults = true
         }
@@ -122,7 +125,7 @@ class PrecoverProcessor(
                 dependencies = Dependencies(true, *sources.toTypedArray()),
                 packageName = "io.github.donald_okara.precover",
                 fileName = "precover-metadata",
-                extensionName = "json"
+                extensionName = "json",
             )
             file.write(encoded.toByteArray())
             file.close()
@@ -169,7 +172,7 @@ class PrecoverProcessor(
         }
 
         val body = bodyContent.toString()
-        
+
         // Find potential composable calls (simple regex for PascalCase or camelCase followed by parenthesis)
         val regex = Regex("([A-Z][a-zA-Z0-9_]*|(?<![a-zA-Z0-9_])[a-z][a-zA-Z0-9_]*)\\s*\\(")
         return regex.findAll(body)
@@ -185,14 +188,14 @@ class PrecoverProcessor(
         val isInternal = function.modifiers.contains(Modifier.INTERNAL)
 
         val parameters = function.parameters.map { param ->
-            val previewParam = param.annotations.find { 
+            val previewParam = param.annotations.find {
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == "androidx.compose.ui.tooling.preview.PreviewParameter"
             }?.let { annotation ->
                 val providerType = annotation.arguments.find { arg -> arg.name?.asString() == "provider" }?.value as? KSType
                 val limit = annotation.arguments.find { arg -> arg.name?.asString() == "limit" }?.value as? Int
                 PreviewParameterMetadata(
                     providerType = providerType?.declaration?.qualifiedName?.asString() ?: "Unknown",
-                    limit = limit
+                    limit = limit,
                 )
             }
 
@@ -200,7 +203,7 @@ class PrecoverProcessor(
                 name = param.name?.asString() ?: "Unknown",
                 type = param.type.resolve().declaration.qualifiedName?.asString() ?: "Unknown",
                 hasDefaultValue = param.hasDefault,
-                previewParameter = previewParam
+                previewParameter = previewParam,
             )
         }
 
@@ -217,7 +220,7 @@ class PrecoverProcessor(
             previews = previews,
             linkTargets = linkTargets,
             annotations = annotations,
-            hasDirectPreviews = previews.any { !it.isLink }
+            hasDirectPreviews = previews.any { !it.isLink },
         )
     }
 
@@ -227,7 +230,7 @@ class PrecoverProcessor(
             .mapNotNull { annotation ->
                 val targetType = annotation.arguments.find { it.name?.asString() == "target" }?.value as? KSType
                 val targetName = annotation.arguments.find { it.name?.asString() == "value" }?.value as? String
-                
+
                 if (!targetName.isNullOrBlank()) {
                     targetName
                 } else if (targetType != null && targetType.declaration.qualifiedName?.asString() != "kotlin.Unit") {
@@ -239,13 +242,13 @@ class PrecoverProcessor(
             .toList()
 
         val indirectLinks = annotated.annotations
-            .filter { 
+            .filter {
                 val qualifiedName = it.annotationType.resolve().declaration.qualifiedName?.asString()
                 qualifiedName != null &&
-                qualifiedName != "androidx.compose.runtime.Composable" && 
-                qualifiedName != "androidx.compose.ui.tooling.preview.Preview" &&
-                qualifiedName != "io.github.donald_okara.precover.core.annotations.PrecoverLink" &&
-                !visited.contains(qualifiedName)
+                    qualifiedName != "androidx.compose.runtime.Composable" &&
+                    qualifiedName != "androidx.compose.ui.tooling.preview.Preview" &&
+                    qualifiedName != "io.github.donald_okara.precover.core.annotations.PrecoverLink" &&
+                    !visited.contains(qualifiedName)
             }
             .flatMap { annotation ->
                 val declaration = annotation.annotationType.resolve().declaration
@@ -264,20 +267,20 @@ class PrecoverProcessor(
 
     private fun extractPreviews(annotated: KSAnnotated, visited: MutableSet<String> = mutableSetOf()): List<PreviewMetadata> {
         val directPreviews = annotated.annotations
-            .filter { 
+            .filter {
                 val name = it.annotationType.resolve().declaration.qualifiedName?.asString()
                 name == "androidx.compose.ui.tooling.preview.Preview"
             }
             .map { parsePreviewAnnotation(it) }
 
         val indirectPreviews = annotated.annotations
-            .filter { 
+            .filter {
                 val qualifiedName = it.annotationType.resolve().declaration.qualifiedName?.asString()
                 qualifiedName != null &&
-                qualifiedName != "androidx.compose.runtime.Composable" && 
-                qualifiedName != "androidx.compose.ui.tooling.preview.Preview" &&
-                qualifiedName != "io.github.donald_okara.precover.core.annotations.PrecoverLink" &&
-                !visited.contains(qualifiedName)
+                    qualifiedName != "androidx.compose.runtime.Composable" &&
+                    qualifiedName != "androidx.compose.ui.tooling.preview.Preview" &&
+                    qualifiedName != "io.github.donald_okara.precover.core.annotations.PrecoverLink" &&
+                    !visited.contains(qualifiedName)
             }
             .flatMap { annotation ->
                 val declaration = annotation.annotationType.resolve().declaration
@@ -295,7 +298,7 @@ class PrecoverProcessor(
 
     private fun parsePreviewAnnotation(annotation: KSAnnotation): PreviewMetadata {
         val args = annotation.arguments.associate { it.name?.asString() to it.value }
-        
+
         return PreviewMetadata(
             name = args["name"] as? String,
             group = args["group"] as? String,
@@ -310,13 +313,11 @@ class PrecoverProcessor(
             device = args["device"] as? String,
             uiMode = args["uiMode"] as? Int,
             wallpaper = args["wallpaper"] as? Int,
-            isLink = false
+            isLink = false,
         )
     }
 }
 
 class PrecoverProcessorProvider : SymbolProcessorProvider {
-    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
-        return PrecoverProcessor(environment.codeGenerator, environment.logger, environment.options)
-    }
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor = PrecoverProcessor(environment.codeGenerator, environment.logger, environment.options)
 }

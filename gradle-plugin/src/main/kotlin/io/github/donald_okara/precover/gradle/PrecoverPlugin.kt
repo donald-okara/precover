@@ -12,7 +12,7 @@ import java.io.File
 class PrecoverPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("precover", PrecoverExtension::class.java)
-        
+
         extension.coverageThreshold.convention(80f)
         extension.htmlReportEnabled.convention(true)
         extension.jsonReportEnabled.convention(true)
@@ -32,11 +32,11 @@ class PrecoverPlugin : Plugin<Project> {
             // In a real plugin, we would iterate over variants, but for this task we target debug
             val kspTaskName = "kspDebugKotlin"
             val kspTask = project.tasks.findByName(kspTaskName)
-            
+
             val metadataFile = project.file("build/generated/ksp/debug/resources/io/github/donald_okara/precover/precover-metadata.json")
 
             val ruleOverridesProvider = project.provider {
-                extension.rules.associate { 
+                extension.rules.associate {
                     it.type to RuleOverride(it.enabled.get(), it.weight.get())
                 }
             }

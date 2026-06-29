@@ -11,5 +11,5 @@ enum class RuleType(val displayName: String) : Serializable {
     PRECOVER_LINK_USAGE("PrecoverLink Usage"),
     THEME_COVERAGE("Theme Coverage"),
     FONT_SCALE_COVERAGE("Font Scale Coverage"),
-    SCREEN_SIZE_COVERAGE("Screen Size Coverage")
+    SCREEN_SIZE_COVERAGE("Screen Size Coverage"),
 }

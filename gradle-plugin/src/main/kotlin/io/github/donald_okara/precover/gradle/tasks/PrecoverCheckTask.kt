@@ -4,8 +4,8 @@ import io.github.donald_okara.precover.core.models.ComposableMetadata
 import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleEngine
 import io.github.donald_okara.precover.rules.engine.RuleOverride
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty

@@ -12,6 +12,7 @@ kotlin = "2.2.10"
 composeBom = "2024.09.00"
 googleDevtoolsKsp = "2.3.5"
 jetbrainsKotlinPluginSerialization = "2.2.21"
+spotless = "8.7.0"
 kotlinxSerializationCore = "1.9.0"
 navigation3Ui = "1.0.1"
 navigation3Runtime = "1.0.1"
@@ -102,5 +103,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDevtoolsKsp" }
 jetbrains-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "jetbrainsKotlinPluginSerialization" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 

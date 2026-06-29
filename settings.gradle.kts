@@ -28,4 +28,3 @@ include(":core")
 include(":ksp")
 include(":rules")
 include(":gradle-plugin")
- 

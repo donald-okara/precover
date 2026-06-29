@@ -5,8 +5,8 @@ import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleEngine
 import io.github.donald_okara.precover.rules.engine.RuleOverride
 import io.github.donald_okara.precover.rules.report.HtmlReporter
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -45,7 +45,7 @@ abstract class PrecoverReportTask : DefaultTask() {
         if (!outDir.exists()) outDir.mkdirs()
 
         if (jsonEnabled.get()) {
-            val reportJson = Json { 
+            val reportJson = Json {
                 prettyPrint = true
                 encodeDefaults = true
             }

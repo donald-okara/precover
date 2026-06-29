@@ -46,6 +46,8 @@ dependencies {
 Customize the behavior using the `precover` extension:
 
 ```kotlin
+import io.github.donald_okara.precover.rules.engine.RuleWeight
+
 precover {
     // Threshold for precoverCheck task (0-100)
     coverageThreshold.set(80f)
@@ -54,9 +56,18 @@ precover {
     jsonReportEnabled.set(true)
 
     // Configure rules using DSL labels
-    THEME_COVERAGE {
+    PREVIEW_PRESENCE {
         enabled.set(true)
-        weight.set(io.github.donald_okara.precover.rules.engine.RuleWeight.HIGH)
+        weight.set(RuleWeight.MANDATORY)
+    }
+
+    THEME_COVERAGE {
+        enabled.set(false)
+    }
+
+    FONT_SCALE_COVERAGE {
+        enabled.set(true)
+        weight.set(RuleWeight.MEDIUM)
     }
 }
 ```

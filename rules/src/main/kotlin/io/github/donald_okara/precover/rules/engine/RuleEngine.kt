@@ -10,9 +10,9 @@ class RuleEngine(
         PrecoverLinkUsageRule(),
         ThemeRule(),
         FontScaleRule(),
-        ScreenSizeRule()
+        ScreenSizeRule(),
     ),
-    private val overrides: Map<RuleType, RuleOverride> = emptyMap()
+    private val overrides: Map<RuleType, RuleOverride> = emptyMap(),
 ) {
     fun analyze(metadata: List<ComposableMetadata>): CoverageReport {
         val activeRules = rules.filter { rule ->
@@ -30,12 +30,12 @@ class RuleEngine(
             }
 
             val ruleViolations = applicableRules.associateWith { it.evaluate(composable) }
-            
+
             // If any MANDATORY rule has an ERROR, score is 0
             val hasMandatoryError = applicableRules.any { rule ->
                 val weight = overrides[rule.type]?.weight ?: rule.weight
-                weight == RuleWeight.MANDATORY && 
-                ruleViolations[rule]?.any { it.severity == Severity.ERROR } == true
+                weight == RuleWeight.MANDATORY &&
+                    ruleViolations[rule]?.any { it.severity == Severity.ERROR } == true
             }
 
             // Also treat empty previews as a hard 0 regardless of enabled rules
@@ -59,7 +59,7 @@ class RuleEngine(
                         violations.any { it.severity == Severity.INFO } -> 0.9f
                         else -> 1.0f
                     }
-                    
+
                     earnedPoints += weight * ruleCompletion
                 }
 
@@ -71,18 +71,20 @@ class RuleEngine(
                 packageName = composable.packageName,
                 score = score,
                 violations = ruleViolations.values.flatten(),
-                isComponent = composable.isComponent
+                isComponent = composable.isComponent,
             )
         }
 
-        val overallScore = if (componentCoverages.isEmpty()) 0f else {
+        val overallScore = if (componentCoverages.isEmpty()) {
+            0f
+        } else {
             val componentScores = componentCoverages.filter { it.isComponent }.map { it.score }
             if (componentScores.isEmpty()) 0f else componentScores.average().toFloat()
         }
 
         return CoverageReport(
             overallScore = overallScore,
-            components = componentCoverages
+            components = componentCoverages,
         )
     }
 }

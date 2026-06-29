@@ -2,8 +2,8 @@ package io.github.donald_okara.precover.rules.definitions
 
 import io.github.donald_okara.precover.core.annotations.PrecoverLink
 import io.github.donald_okara.precover.core.models.ComposableMetadata
-import io.github.donald_okara.precover.core.models.RuleViolation
 import io.github.donald_okara.precover.core.models.RuleType
+import io.github.donald_okara.precover.core.models.RuleViolation
 import io.github.donald_okara.precover.core.models.Severity
 import io.github.donald_okara.precover.rules.engine.PrecoverRule
 import io.github.donald_okara.precover.rules.engine.RuleWeight
@@ -20,7 +20,7 @@ class PrecoverLinkUsageRule : PrecoverRule {
     override val weight: RuleWeight = RuleWeight.MANDATORY
 
     override fun evaluate(composable: ComposableMetadata): List<RuleViolation> {
-        val hasPrecoverLink = composable.annotations.any { 
+        val hasPrecoverLink = composable.annotations.any {
             it == PrecoverLink::class.qualifiedName
         }
 
@@ -29,8 +29,8 @@ class PrecoverLinkUsageRule : PrecoverRule {
                 RuleViolation(
                     ruleName = name,
                     message = "Function '${composable.functionName}' has @PrecoverLink but no direct @Preview annotation. @PrecoverLink is an accessory and requires a @Preview on the same function to be effective.",
-                    severity = Severity.ERROR
-                )
+                    severity = Severity.ERROR,
+                ),
             )
         }
         return emptyList()

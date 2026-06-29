@@ -24,16 +24,16 @@ fun ListScreen(onItemClick: (Int) -> Unit = {}, onSettingsClick: () -> Unit = {}
                     IconButton(onClick = onSettingsClick) {
                         Icon(Icons.Rounded.Settings, contentDescription = "Settings")
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         LazyColumn(Modifier.padding(padding)) {
             items((1..20).toList()) { id ->
                 ListItem(
                     headlineContent = { Text("Item $id") },
                     supportingContent = { Text("Description for item $id") },
-                    modifier = Modifier.clickable { onItemClick(id) }
+                    modifier = Modifier.clickable { onItemClick(id) },
                 )
             }
         }

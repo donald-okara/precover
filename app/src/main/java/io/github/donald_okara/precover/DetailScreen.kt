@@ -5,9 +5,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.dp
 import io.github.donald_okara.precover.core.annotations.PrecoverLink
 import io.github.donald_okara.precover.ui.theme.PrecoverTheme
 
@@ -19,7 +19,7 @@ annotation class DetailScreenMarker
 @Composable
 fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text(item.title) }) }
+        topBar = { TopAppBar(title = { Text(item.title) }) },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -27,7 +27,7 @@ fun DetailScreen(item: ItemDetail = ItemDetail(1, "Item 1")) {
                 .padding(16.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Text("Details for ${item.title}", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(16.dp))
@@ -45,13 +45,13 @@ fun MyDetailPreview() {
 }
 
 @Preview(
-    fontScale = 1.2f
+    fontScale = 1.2f,
 )
 @PreviewLightDark
-@PrecoverLink(target = DetailScreenMarker::class , name = "Detail - Via NavKey")
+@PrecoverLink(target = DetailScreenMarker::class, name = "Detail - Via NavKey")
 @Composable
 fun MyAdvancedDetailPreview() {
-    PrecoverTheme{
+    PrecoverTheme {
         DetailScreen()
     }
 }

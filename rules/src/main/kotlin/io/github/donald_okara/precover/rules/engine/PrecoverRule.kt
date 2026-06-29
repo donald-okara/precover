@@ -1,9 +1,8 @@
 package io.github.donald_okara.precover.rules.engine
 
 import io.github.donald_okara.precover.core.models.ComposableMetadata
-import io.github.donald_okara.precover.core.models.RuleViolation
 import io.github.donald_okara.precover.core.models.RuleType
-
+import io.github.donald_okara.precover.core.models.RuleViolation
 import java.io.Serializable
 
 /**
@@ -12,12 +11,15 @@ import java.io.Serializable
 enum class RuleWeight(val value: Int) : Serializable {
     /** Minor suggestions, low impact on score. */
     LOW(1),
+
     /** Standard checks. */
     MEDIUM(2),
+
     /** Important coverage requirements. */
     HIGH(3),
+
     /** Critical checks. If a mandatory rule fails with an ERROR, the component score drops to 0. */
-    MANDATORY(5)
+    MANDATORY(5),
 }
 
 /**
@@ -25,7 +27,7 @@ enum class RuleWeight(val value: Int) : Serializable {
  */
 data class RuleOverride(
     val enabled: Boolean = true,
-    val weight: RuleWeight? = null
+    val weight: RuleWeight? = null,
 ) : Serializable
 
 /**

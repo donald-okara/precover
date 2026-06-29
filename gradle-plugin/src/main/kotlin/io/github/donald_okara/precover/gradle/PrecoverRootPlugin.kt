@@ -36,9 +36,9 @@ class PrecoverRootPlugin : Plugin<Project> {
         rootProject.subprojects { subproject ->
             rootProject.logger.info("Precover: Considering subproject ${subproject.path}")
             subproject.afterEvaluate {
-                val hasAndroid = subproject.plugins.hasPlugin("com.android.application") || 
-                                 subproject.plugins.hasPlugin("com.android.library")
-                
+                val hasAndroid = subproject.plugins.hasPlugin("com.android.application") ||
+                    subproject.plugins.hasPlugin("com.android.library")
+
                 if (hasAndroid) {
                     rootProject.logger.info("Precover: Subproject ${subproject.path} is an Android project")
                     // Automatically apply the base plugin if not already present
@@ -50,7 +50,7 @@ class PrecoverRootPlugin : Plugin<Project> {
                     subproject.tasks.withType(PrecoverReportTask::class.java).configureEach { reportTask ->
                         aggregateReportTask.configure { it.inputReports.from(reportTask.outputDirectory.file("precover-report.json")) }
                         aggregateReportTask.configure { it.dependsOn(reportTask) }
-                        
+
                         aggregateCheckTask.configure { it.inputReports.from(reportTask.outputDirectory.file("precover-report.json")) }
                         aggregateCheckTask.configure { it.dependsOn(reportTask) }
                     }

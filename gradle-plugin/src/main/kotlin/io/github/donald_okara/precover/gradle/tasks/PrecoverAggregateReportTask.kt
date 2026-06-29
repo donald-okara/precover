@@ -31,22 +31,24 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
     fun run() {
         val json = Json { ignoreUnknownKeys = true }
         val modules = mutableListOf<ModuleCoverage>()
-        
+
         inputReports.files.forEach { file ->
             try {
                 val reportContent = file.readText()
                 val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
-                
+
                 // Extract module name from path (e.g., .../app/build/reports/precover/precover-report.json -> :app)
                 // This is a heuristic, in a real plugin we might pass module paths explicitly
                 val modulePath = file.absolutePath.substringAfter("/precover/").substringBefore("/build/").replace("/", ":")
-                
-                modules.add(ModuleCoverage(
-                    modulePath = modulePath,
-                    score = report.overallScore,
-                    componentCount = report.components.size,
-                    reportPath = "../../${file.parentFile.relativeTo(outputDirectory.get().asFile.parentFile.parentFile).path}/precover-report.html"
-                ))
+
+                modules.add(
+                    ModuleCoverage(
+                        modulePath = modulePath,
+                        score = report.overallScore,
+                        componentCount = report.components.size,
+                        reportPath = "../../${file.parentFile.relativeTo(outputDirectory.get().asFile.parentFile.parentFile).path}/precover-report.html",
+                    ),
+                )
             } catch (e: Exception) {
                 logger.warn("Precover: Failed to parse report ${file.path}: ${e.message}")
             }
@@ -64,7 +66,10 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
         if (!outDir.exists()) outDir.mkdirs()
 
         if (jsonEnabled.get()) {
-            val reportJson = Json { prettyPrint = true; encodeDefaults = true }
+            val reportJson = Json {
+                prettyPrint = true
+                encodeDefaults = true
+            }
             val encoded = reportJson.encodeToString(AggregateCoverageReport.serializer(), aggregateReport)
             File(outDir, "aggregate-report.json").writeText(encoded)
         }
