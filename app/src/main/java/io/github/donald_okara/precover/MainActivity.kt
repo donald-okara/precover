@@ -64,24 +64,24 @@ fun PrecoverApp() {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text("Select an item to see details")
                         }
-                    }
-                )
+                    },
+                ),
             ) {
                 ListScreen(
                     onItemClick = { id -> backStack.add(ItemDetail(id, "Item $id")) },
-                    onSettingsClick = { backStack.add(Settings) }
+                    onSettingsClick = { backStack.add(Settings) },
                 )
             }
             entry<ItemDetail>(
-                metadata = ListDetailSceneStrategy.detailPane()
+                metadata = ListDetailSceneStrategy.detailPane(),
             ) { item ->
                 DetailScreen(item = item)
             }
             entry<Settings>(
-                metadata = ListDetailSceneStrategy.extraPane()
+                metadata = ListDetailSceneStrategy.extraPane(),
             ) {
                 SettingsScreen()
             }
-        }
+        },
     )
 }

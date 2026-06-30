@@ -3,13 +3,20 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
-    id("io.github.donald-okara.precover")
 }
 
-precover {
-    coverageThreshold.set(75f)
-    htmlReportEnabled.set(true)
-    jsonReportEnabled.set(true)
+if (project.findProperty("precover.enabled") != "false") {
+    apply(plugin = "io.github.donald-okara.precover")
+
+    val extension = extensions.getByName("precover")
+    try {
+        val clz = extension::class.java
+        (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
+        (clz.getMethod("getHtmlReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+        (clz.getMethod("getJsonReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+    } catch (e: Exception) {
+        // Plugin not built yet
+    }
 }
 
 android {

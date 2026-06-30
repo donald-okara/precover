@@ -14,7 +14,7 @@ class PrecoverPluginTest {
         // afterEvaluate is needed because tasks are registered there
         // In a unit test with ProjectBuilder, we can manually trigger afterEvaluate or just check the tasks if they were registered directly.
         // Since we used afterEvaluate in the plugin, we might need a better way to test, but let's see if we can trigger it.
-        
+
         // Actually, let's check if the extension exists first
         assertNotNull(project.extensions.findByName("precover"))
     }

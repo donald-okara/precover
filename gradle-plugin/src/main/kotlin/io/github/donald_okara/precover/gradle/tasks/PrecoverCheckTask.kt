@@ -1,27 +1,31 @@
 package io.github.donald_okara.precover.gradle.tasks
 
 import io.github.donald_okara.precover.core.models.ComposableMetadata
+import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleEngine
 import io.github.donald_okara.precover.rules.engine.RuleOverride
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
 abstract class PrecoverCheckTask : DefaultTask() {
 
     @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val metadataFile: RegularFileProperty
 
     @get:Input
     abstract val threshold: Property<Float>
 
     @get:Input
-    abstract val ruleOverrides: MapProperty<String, RuleOverride>
+    abstract val ruleOverrides: MapProperty<RuleType, RuleOverride>
 
     @TaskAction
     fun run() {

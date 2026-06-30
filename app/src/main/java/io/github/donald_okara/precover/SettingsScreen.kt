@@ -16,7 +16,7 @@ import io.github.donald_okara.precover.core.annotations.PrecoverLink
 @Composable
 fun SettingsScreen() {
     Scaffold(
-        topBar = { androidx.compose.material3.TopAppBar(title = { Text("Settings") }) }
+        topBar = { androidx.compose.material3.TopAppBar(title = { Text("Settings") }) },
     ) { padding ->
         Column(Modifier.padding(padding).padding(16.dp)) {
             Text("Settings Content", style = MaterialTheme.typography.titleLarge)
