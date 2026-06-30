@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class CoverageReport(
     val overallScore: Float,
     val components: List<ComponentCoverage>,
+    val modulePath: String? = null,
 )
 
 @Serializable

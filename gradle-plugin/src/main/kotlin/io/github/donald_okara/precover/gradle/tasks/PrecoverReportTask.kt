@@ -26,6 +26,9 @@ abstract class PrecoverReportTask : DefaultTask() {
     abstract val outputDirectory: DirectoryProperty
 
     @get:Input
+    abstract val modulePath: Property<String>
+
+    @get:Input
     abstract val htmlEnabled: Property<Boolean>
 
     @get:Input
@@ -41,7 +44,7 @@ abstract class PrecoverReportTask : DefaultTask() {
         val metadata = json.decodeFromString(ListSerializer(ComposableMetadata.serializer()), metadataContent)
 
         val engine = RuleEngine(overrides = ruleOverrides.get())
-        val report = engine.analyze(metadata)
+        val report = engine.analyze(metadata).copy(modulePath = modulePath.get())
 
         val outDir = outputDirectory.get().asFile
         if (!outDir.exists()) outDir.mkdirs()

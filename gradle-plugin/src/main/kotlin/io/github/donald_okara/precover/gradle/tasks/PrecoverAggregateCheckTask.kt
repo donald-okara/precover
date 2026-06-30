@@ -31,7 +31,9 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
             }
         }
 
-        if (scores.isEmpty()) return
+        if (scores.isEmpty()) {
+            throw GradleException("Precover: No module reports found to check. Ensure Precover is applied and tasks are executed.")
+        }
 
         val aggregateScore = scores.average().toFloat()
         val targetThreshold = threshold.get()

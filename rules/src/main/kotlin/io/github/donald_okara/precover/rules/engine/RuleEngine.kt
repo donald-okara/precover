@@ -11,6 +11,7 @@ class RuleEngine(
         ThemeRule(),
         FontScaleRule(),
         ScreenSizeRule(),
+        ScenarioCoverageRule(),
     ),
     private val overrides: Map<RuleType, RuleOverride> = emptyMap(),
 ) {

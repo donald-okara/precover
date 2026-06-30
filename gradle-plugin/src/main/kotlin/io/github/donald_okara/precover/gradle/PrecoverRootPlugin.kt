@@ -45,13 +45,18 @@ class PrecoverRootPlugin : Plugin<Project> {
                 }
 
                 // Link submodule report to root aggregation lazily
-                subproject.tasks.withType(PrecoverReportTask::class.java).configureEach { reportTask ->
-                    aggregateReportTask.configure {
-                        it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
-                    }
+                subproject.tasks.all { task ->
+                    if (task.name == "precoverReport") {
+                        val reportTask = task as PrecoverReportTask
+                        aggregateReportTask.configure {
+                            it.dependsOn(reportTask)
+                            it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
+                        }
 
-                    aggregateCheckTask.configure {
-                        it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
+                        aggregateCheckTask.configure {
+                            it.dependsOn(reportTask)
+                            it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
+                        }
                     }
                 }
             }
