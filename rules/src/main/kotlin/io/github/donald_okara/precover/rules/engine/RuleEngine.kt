@@ -31,6 +31,9 @@ class RuleEngine(
             }
 
             val ruleViolations = applicableRules.associateWith { it.evaluate(composable) }
+            val passedRules = applicableRules.filter { rule ->
+                ruleViolations[rule]?.isEmpty() ?: true
+            }.map { it.name }
 
             // If any MANDATORY rule has an ERROR, score is 0
             val hasMandatoryError = applicableRules.any { rule ->
@@ -72,6 +75,9 @@ class RuleEngine(
                 packageName = composable.packageName,
                 score = score,
                 violations = ruleViolations.values.flatten(),
+                passedRules = passedRules,
+                requiredScenarios = composable.requiredScenarios,
+                coveredScenarios = composable.previews.mapNotNull { it.scenario },
                 isComponent = composable.isComponent,
             )
         }

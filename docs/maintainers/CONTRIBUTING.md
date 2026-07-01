@@ -57,7 +57,7 @@ Once published, you can run the full suite of checks and generate coverage repor
 ./gradlew precoverAggregateReport precoverAggregateCheck
 ```
 
-**Generate App-specific Report:**
+**Generate module-specific Report:**
 ```bash
 ./gradlew :app:precoverReport
 ```

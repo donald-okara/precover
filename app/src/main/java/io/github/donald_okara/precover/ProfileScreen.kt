@@ -21,30 +21,32 @@ data class ProfileUiState(
     val name: String = "",
     val email: String = "",
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @RequiresPreviewScenarios(
-    PreviewScenario.Loading,
-    PreviewScenario.Empty,
-    PreviewScenario.Error,
-    PreviewScenario.Success
+    PreviewScenario.LOADING,
+    PreviewScenario.EMPTY,
+    PreviewScenario.ERROR,
+    PreviewScenario.SUCCESS,
 )
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(state: ProfileUiState) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Profile") }) }
+        topBar = { TopAppBar(title = { Text("Profile") }) },
     ) { padding ->
         Box(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             when {
                 state.isLoading -> CircularProgressIndicator()
+
                 state.error != null -> Text("Error: ${state.error}", color = MaterialTheme.colorScheme.error)
+
                 else -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(64.dp))
                     Text(state.name, style = MaterialTheme.typography.headlineMedium)
@@ -58,7 +60,7 @@ fun ProfileScreen(state: ProfileUiState) {
 // --- Demo 1: Explicit Scenario Annotation ---
 
 @Preview(showBackground = true, name = "Profile - Loading")
-@Scenario(PreviewScenario.Loading)
+@Scenario(PreviewScenario.LOADING)
 @Composable
 fun ProfileLoadingPreview() {
     PrecoverTheme {
@@ -70,15 +72,15 @@ fun ProfileLoadingPreview() {
 
 class ProfileStateProvider : PrecoverPreviewParameterProvider<ProfileUiState>() {
     override val values = sequenceOf(
-         scenario(PreviewScenario.Success, ProfileUiState(name = "Don Okara", email = "don@example.com")),
-        scenario(PreviewScenario.Error, ProfileUiState(error = "Failed to load profile"))
+        scenario(PreviewScenario.SUCCESS, ProfileUiState(name = "Don Okara", email = "don@example.com")),
+        scenario(PreviewScenario.ERROR, ProfileUiState(error = "Failed to load profile")),
     )
 }
 
 @Preview(showBackground = true)
 @Composable
 fun ProfileProviderPreview(
-    @PreviewParameter(ProfileStateProvider::class) state: ProfileUiState
+    @PreviewParameter(ProfileStateProvider::class) state: ProfileUiState,
 ) {
     PrecoverTheme {
         ProfileScreen(state = state)

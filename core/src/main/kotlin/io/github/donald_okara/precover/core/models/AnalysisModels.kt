@@ -15,6 +15,9 @@ data class ComponentCoverage(
     val packageName: String,
     val score: Float,
     val violations: List<RuleViolation>,
+    val passedRules: List<String> = emptyList(),
+    val requiredScenarios: List<String> = emptyList(),
+    val coveredScenarios: List<String> = emptyList(),
     val isComponent: Boolean = true,
 )
 

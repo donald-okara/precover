@@ -15,5 +15,5 @@ package io.github.donald_okara.precover.core.annotations
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class Scenario(
-    val value: String
+    val value: String,
 )

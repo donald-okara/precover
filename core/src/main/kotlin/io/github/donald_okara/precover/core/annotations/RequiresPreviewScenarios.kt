@@ -14,5 +14,5 @@ package io.github.donald_okara.precover.core.annotations
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 annotation class RequiresPreviewScenarios(
-    vararg val values: String
+    vararg val values: String,
 )

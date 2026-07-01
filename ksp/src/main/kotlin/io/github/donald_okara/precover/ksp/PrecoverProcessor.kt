@@ -47,12 +47,12 @@ class PrecoverProcessor(
             val qualifiedName = "$packageName.$functionName"
 
             // Only infer calls for potential previews
-            val isPotentialPreview = functionName.endsWith("Preview") || 
+            val isPotentialPreview = functionName.endsWith("Preview") ||
                 functionName.contains("_") ||
-                function.annotations.any { 
+                function.annotations.any {
                     val qName = it.annotationType.resolve().declaration.qualifiedName?.asString()
                     qName == "io.github.donald_okara.precover.core.annotations.PrecoverLink" ||
-                    qName == "androidx.compose.ui.tooling.preview.Preview"
+                        qName == "androidx.compose.ui.tooling.preview.Preview"
                 }
 
             if (isPotentialPreview) {
@@ -174,12 +174,24 @@ class PrecoverProcessor(
             // Semantic Naming Enhancement:
             // If the preview is named BaseName_State, extract "State" as the display name
             if (metadata.functionName.contains("_") && basePreviews.all { it.name.isNullOrBlank() }) {
-                val state = metadata.functionName.substringAfter("_").removeSuffix("Preview")
+                val state = normalizeScenarioName(metadata.functionName.substringAfter("_").removeSuffix("Preview"))
                 basePreviews.map { it.copy(name = state, scenario = state) }
             } else {
                 basePreviews
             }
         }
+    }
+
+    private fun normalizeScenarioName(name: String): String {
+        val parts = if (name.any { it.isLowerCase() }) {
+            name.split(Regex("(?=[A-Z])|_"))
+        } else {
+            name.split("_")
+        }
+        return parts.filter { it.isNotBlank() }
+            .joinToString("") { part ->
+                part.lowercase().replaceFirstChar { it.uppercase() }
+            }
     }
 
     private fun extractScenariosFromProvider(classDecl: KSClassDeclaration): List<String> {
@@ -218,7 +230,8 @@ class PrecoverProcessor(
         // Group 2: Constant identifier (e.g. Success)
         val regex = Regex("""scenario\s*\(\s*(?:["']([^"']+)["']|(?:[A-Z][a-zA-Z0-9_]*\.)?([A-Z][a-zA-Z0-9_]*))\s*,""")
         val scenarios = regex.findAll(content).map { match ->
-            match.groupValues[1].takeIf { it.isNotBlank() } ?: match.groupValues[2]
+            val name = match.groupValues[1].takeIf { it.isNotBlank() } ?: match.groupValues[2]
+            normalizeScenarioName(name)
         }.filter { it.isNotBlank() }.toList()
 
         if (scenarios.isNotEmpty()) {
@@ -311,7 +324,7 @@ class PrecoverProcessor(
             it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.RequiresPreviewScenarios"
         }?.let { annotation ->
             val values = annotation.arguments.find { it.name?.asString() == "values" }?.value as? List<*>
-            values?.filterIsInstance<String>()
+            values?.filterIsInstance<String>()?.map { normalizeScenarioName(it) }
         } ?: emptyList()
 
         val annotations = function.annotations.mapNotNull { it.annotationType.resolve().declaration.qualifiedName?.asString() }.toList()
@@ -378,14 +391,16 @@ class PrecoverProcessor(
             ?: annotated.annotations.find {
                 it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink"
             }?.let { it.arguments.find { arg -> arg.name?.asString() == "scenario" }?.value as? String }
-            ?.takeIf { it.isNotBlank() }
+                ?.takeIf { it.isNotBlank() }
+
+        val normalizedScenario = scenario?.let { normalizeScenarioName(it) }
 
         val directPreviews = annotated.annotations
             .filter {
                 val name = it.annotationType.resolve().declaration.qualifiedName?.asString()
                 name == "androidx.compose.ui.tooling.preview.Preview"
             }
-            .map { parsePreviewAnnotation(it).copy(scenario = scenario) }
+            .map { parsePreviewAnnotation(it).copy(scenario = normalizedScenario) }
 
         val indirectPreviews = annotated.annotations
             .filter {
