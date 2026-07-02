@@ -88,7 +88,7 @@ class HtmlReporter {
                     <div class="summary">
                         <div class="summary-info">
                             <h1>Precover Coverage Report</h1>
-                            <p>Generated for module <strong>${report.modulePath ?: "root"}</strong></p>
+                            <p>Generated for module <strong>${escapeHtml(report.modulePath ?: "root")}</strong></p>
                         </div>
                         <div class="score-container">
                             <div class="score-label">Overall Coverage</div>

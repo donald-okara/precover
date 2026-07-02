@@ -30,6 +30,7 @@ class PrecoverProcessor(
                     val qualifiedName = classDecl.qualifiedName?.asString()
                     if (qualifiedName != null) {
                         providerScenarios[qualifiedName] = extractScenariosFromProvider(classDecl)
+                        classDecl.containingFile?.let { sources.add(it) }
                     }
                 }
             }
@@ -385,14 +386,16 @@ class PrecoverProcessor(
     }
 
     private fun extractPreviews(annotated: KSAnnotated, visited: MutableSet<String> = mutableSetOf()): List<PreviewMetadata> {
-        val scenario = annotated.annotations.find {
+        val scenarioFromScenarioAnnotation = annotated.annotations.find {
             it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.Scenario"
         }?.let { it.arguments.find { arg -> arg.name?.asString() == "value" }?.value as? String }
-            ?: annotated.annotations.find {
-                it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink"
-            }?.let { it.arguments.find { arg -> arg.name?.asString() == "scenario" }?.value as? String }
-                ?.takeIf { it.isNotBlank() }
 
+        val scenarioFromLinkAnnotation = annotated.annotations
+            .filter { it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink" }
+            .mapNotNull { it.arguments.find { arg -> arg.name?.asString() == "scenario" }?.value as? String }
+            .firstOrNull { it.isNotBlank() }
+
+        val scenario = scenarioFromScenarioAnnotation ?: scenarioFromLinkAnnotation
         val normalizedScenario = scenario?.let { normalizeScenarioName(it) }
 
         val directPreviews = annotated.annotations
@@ -419,6 +422,13 @@ class PrecoverProcessor(
                     extractPreviews(declaration, visited)
                 } else {
                     emptyList()
+                }
+            }
+            .map { preview ->
+                if (preview.scenario == null && normalizedScenario != null) {
+                    preview.copy(scenario = normalizedScenario)
+                } else {
+                    preview
                 }
             }
 

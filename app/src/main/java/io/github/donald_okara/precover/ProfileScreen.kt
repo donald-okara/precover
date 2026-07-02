@@ -32,7 +32,9 @@ data class ProfileUiState(
 )
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(state: ProfileUiState) {
+fun ProfileScreen(
+    state: ProfileUiState,
+) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Profile") }) },
     ) { padding ->
@@ -72,8 +74,14 @@ fun ProfileLoadingPreview() {
 
 class ProfileStateProvider : PrecoverPreviewParameterProvider<ProfileUiState>() {
     override val values = sequenceOf(
-        scenario(PreviewScenario.SUCCESS, ProfileUiState(name = "Don Okara", email = "don@example.com")),
-        scenario(PreviewScenario.ERROR, ProfileUiState(error = "Failed to load profile")),
+        scenario(
+            PreviewScenario.SUCCESS,
+            ProfileUiState(name = "Don Okara", email = "don@example.com"),
+        ),
+        scenario(
+            PreviewScenario.ERROR,
+            ProfileUiState(error = "Failed to load profile"),
+        ),
     )
 }
 

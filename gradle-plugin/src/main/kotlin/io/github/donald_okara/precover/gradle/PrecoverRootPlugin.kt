@@ -45,9 +45,11 @@ class PrecoverRootPlugin : Plugin<Project> {
                 }
 
                 // Link submodule report to root aggregation lazily
-                subproject.tasks.all { task ->
-                    if (task.name == "precoverReport") {
-                        val reportTask = task as PrecoverReportTask
+                subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
+                    subproject.tasks.named("precoverReport", PrecoverReportTask::class.java).configure { reportTask ->
+                        // Force JSON output for aggregation to work
+                        reportTask.jsonEnabled.set(true)
+
                         aggregateReportTask.configure {
                             it.dependsOn(reportTask)
                             it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
