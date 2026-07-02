@@ -55,11 +55,14 @@ class PrecoverPlugin : Plugin<Project> {
         }
 
         project.afterEvaluate {
-            val kspTaskName = "kspDebugKotlin"
-            val kspTask = project.tasks.findByName(kspTaskName)
-            if (kspTask != null) {
-                reportTask.configure { it.dependsOn(kspTask) }
-                project.tasks.named("precoverCheck").configure { it.dependsOn(kspTask) }
+            // Support multiple variants by looking for any KSP Kotlin task
+            val kspTasks = project.tasks.matching { it.name.startsWith("ksp") && it.name.endsWith("Kotlin") }
+            if (kspTasks.isNotEmpty()) {
+                reportTask.configure { it.dependsOn(kspTasks) }
+                project.tasks.named("precoverCheck").configure { it.dependsOn(kspTasks) }
+
+                // If it's a non-debug variant, we might need to adjust metadataFile path
+                // But for now, we'll keep the convention or try to find it
             }
 
             // Link to the standard check task

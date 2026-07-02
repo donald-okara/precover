@@ -34,37 +34,36 @@ class PrecoverRootPlugin : Plugin<Project> {
         }
 
         rootProject.subprojects { subproject ->
-            rootProject.logger.info("Precover: Considering subproject ${subproject.path}")
-
             // Use withId to avoid afterEvaluate where possible
             val androidPluginHandler = { _: Any ->
-                rootProject.logger.info("Precover: Subproject ${subproject.path} is an Android project")
                 // Automatically apply the base plugin if not already present
                 if (!subproject.plugins.hasPlugin("io.github.donald-okara.precover")) {
                     subproject.plugins.apply("io.github.donald-okara.precover")
-                }
-
-                // Link submodule report to root aggregation lazily
-                subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
-                    subproject.tasks.named("precoverReport", PrecoverReportTask::class.java).configure { reportTask ->
-                        // Force JSON output for aggregation to work
-                        reportTask.jsonEnabled.set(true)
-
-                        aggregateReportTask.configure {
-                            it.dependsOn(reportTask)
-                            it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
-                        }
-
-                        aggregateCheckTask.configure {
-                            it.dependsOn(reportTask)
-                            it.inputReports.from(reportTask.outputDirectory.file("precover-report.json"))
-                        }
-                    }
                 }
             }
 
             subproject.plugins.withId("com.android.application", androidPluginHandler)
             subproject.plugins.withId("com.android.library", androidPluginHandler)
+
+            // Link submodule report to root aggregation lazily for any project with the plugin
+            subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
+                val reportTaskProvider = subproject.tasks.named("precoverReport", PrecoverReportTask::class.java)
+
+                reportTaskProvider.configure { reportTask ->
+                    // Force JSON output for aggregation to work
+                    reportTask.jsonEnabled.set(true)
+                }
+
+                aggregateReportTask.configure {
+                    it.dependsOn(reportTaskProvider)
+                    it.inputReports.from(reportTaskProvider.flatMap { it.outputDirectory.file("precover-report.json") })
+                }
+
+                aggregateCheckTask.configure {
+                    it.dependsOn(reportTaskProvider)
+                    it.inputReports.from(reportTaskProvider.flatMap { it.outputDirectory.file("precover-report.json") })
+                }
+            }
         }
 
         // Link root check to subproject checks if desired, or just standalone
