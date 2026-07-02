@@ -12,4 +12,5 @@ enum class RuleType(val displayName: String) : Serializable {
     THEME_COVERAGE("Theme Coverage"),
     FONT_SCALE_COVERAGE("Font Scale Coverage"),
     SCREEN_SIZE_COVERAGE("Screen Size Coverage"),
+    SCENARIO_COVERAGE("Scenario Coverage"),
 }

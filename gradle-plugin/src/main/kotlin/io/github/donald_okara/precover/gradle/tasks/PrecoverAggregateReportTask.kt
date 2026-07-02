@@ -6,6 +6,7 @@ import io.github.donald_okara.precover.core.models.ModuleCoverage
 import io.github.donald_okara.precover.rules.report.AggregateHtmlReporter
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -38,9 +39,12 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
                 val reportContent = file.readText()
                 val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
 
-                // Extract module name from path (e.g., .../app/build/reports/precover/precover-report.json -> :app)
-                // This is a heuristic, in a real plugin we might pass module paths explicitly
-                val modulePath = file.absolutePath.substringAfter("/precover/").substringBefore("/build/").replace("/", ":")
+                // Use module path from report if available, fallback to heuristic
+                val modulePath = report.modulePath ?: file.absolutePath
+                    .substringAfter("/precover/")
+                    .substringBefore("/build/")
+                    .replace("/", ":")
+                    .let { if (it.startsWith(":")) it else ":$it" }
 
                 modules.add(
                     ModuleCoverage(
@@ -56,8 +60,7 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
         }
 
         if (modules.isEmpty()) {
-            logger.warn("Precover: No module reports found to aggregate.")
-            return
+            throw GradleException("Precover: No module reports found to aggregate. Ensure Precover is applied and tasks are executed.")
         }
 
         val overallScore = modules.map { it.score }.average().toFloat()

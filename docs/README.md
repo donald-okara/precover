@@ -6,6 +6,7 @@ Welcome to the Precover documentation. Precover is a static analysis tool design
 For developers integrating Precover into their apps.
 - [Getting Started](users/GETTING_STARTED.md): Setup and basic configuration.
 - [@PrecoverLink Guide](users/PRECOVER_LINK.md): How to link previews to your components.
+- [Scenario Coverage](users/SCENARIO_COVERAGE.md): Ensuring all UI states are previewed.
 - [Built-in Rules](users/RULES.md): Detailed explanation of coverage checks.
 
 ## 🛠 Maintainer Documentation

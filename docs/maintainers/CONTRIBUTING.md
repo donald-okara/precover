@@ -32,3 +32,51 @@ The `PrecoverProcessor` uses several strategies to link previews:
 2. **Contextual**: Matches via `NavKey` types or Marker annotations.
 3. **Inferred**: Scanning the function body for calls to known Composables.
 4. **Naming**: Fallback to `ComposableNamePreview` convention.
+
+## Testing Your Changes Locally
+
+Since Precover is a Gradle plugin that depends on itself for reporting, testing changes requires a two-step "bootstrap" process.
+
+### 1. Publish to Maven Local
+Before running reports, you must publish the latest version of the plugin and its dependencies to your local Maven repository. Use the `precover.enabled=false` flag to prevent the plugin from trying to run on itself during its own build:
+
+```bash
+./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false
+```
+
+### 2. Run Quality Checks & Reports
+Once published, you can run the full suite of checks and generate coverage reports for the `:app` module or the entire project:
+
+**Run all CI checks (Spotless, Build, Tests):**
+```bash
+./gradlew spotlessCheck build
+```
+
+**Generate Aggregate Reports:**
+```bash
+./gradlew precoverAggregateReport precoverAggregateCheck
+```
+
+**Generate module-specific Report:**
+```bash
+./gradlew :app:precoverReport
+```
+
+### Simulating CI Workflows
+To ensure your PR passes CI, you can run the equivalent of our GitHub Actions locally:
+
+**Run Lint Checks (`lint.yml`):**
+```bash
+./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false
+./gradlew spotlessCheck build :app:precoverReport
+```
+
+**Run Precover Checks (`precover_check.yml`):**
+```bash
+./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false
+./gradlew precoverAggregateReport precoverAggregateCheck
+```
+
+The generated reports can be found in:
+- Project-wide: `build/reports/precover/aggregate/`
+- App Module: `app/build/reports/precover/`

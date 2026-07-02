@@ -16,8 +16,25 @@ class PrecoverProcessor(
     private val metadataList = mutableListOf<ComposableMetadata>()
     private val sources = mutableListOf<KSFile>()
     private val previewBodyCalls = mutableMapOf<String, Set<String>>()
+    private val providerScenarios = mutableMapOf<String, List<String>>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        // Extract scenarios from providers
+        resolver.getAllFiles().flatMap { it.declarations }
+            .filterIsInstance<KSClassDeclaration>()
+            .forEach { classDecl ->
+                val isProvider = classDecl.superTypes.any {
+                    it.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.PrecoverPreviewParameterProvider"
+                }
+                if (isProvider) {
+                    val qualifiedName = classDecl.qualifiedName?.asString()
+                    if (qualifiedName != null) {
+                        providerScenarios[qualifiedName] = extractScenariosFromProvider(classDecl)
+                        classDecl.containingFile?.let { sources.add(it) }
+                    }
+                }
+            }
+
         val composables = resolver.getSymbolsWithAnnotation("androidx.compose.runtime.Composable")
             .filterIsInstance<KSFunctionDeclaration>()
 
@@ -31,9 +48,15 @@ class PrecoverProcessor(
             val qualifiedName = "$packageName.$functionName"
 
             // Only infer calls for potential previews
-            if (functionName.endsWith("Preview") || functionName.contains("_") ||
-                function.annotations.any { it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink" }
-            ) {
+            val isPotentialPreview = functionName.endsWith("Preview") ||
+                functionName.contains("_") ||
+                function.annotations.any {
+                    val qName = it.annotationType.resolve().declaration.qualifiedName?.asString()
+                    qName == "io.github.donald_okara.precover.core.annotations.PrecoverLink" ||
+                        qName == "androidx.compose.ui.tooling.preview.Preview"
+                }
+
+            if (isPotentialPreview) {
                 previewBodyCalls[qualifiedName] = inferCallsFromBody(function)
             }
         }
@@ -60,6 +83,8 @@ class PrecoverProcessor(
 
         val finalMetadata = baseFunctions.map { base ->
             val baseQualifiedName = "${base.packageName}.${base.functionName}"
+
+            val expandedBasePreviews = expandPreviewsForMetadata(base)
 
             // Find any preview functions that should be attributed to this base function
             val attributedPreviews = previewFunctions
@@ -90,22 +115,9 @@ class PrecoverProcessor(
                         previewFunc.packageName == base.packageName &&
                         previewFunc.fileName == base.fileName
                 }
-                .flatMap { previewFunc ->
-                    // Semantic Naming Enhancement:
-                    // If the preview is named BaseName_State, extract "State" as the display name
-                    if (previewFunc.functionName.contains("_") && previewFunc.previews.all { it.name.isNullOrBlank() }) {
-                        val state = previewFunc.functionName.substringAfter("_").removeSuffix("Preview")
-                        previewFunc.previews.map { it.copy(name = state) }
-                    } else {
-                        previewFunc.previews
-                    }
-                }
+                .flatMap { previewFunc -> expandPreviewsForMetadata(previewFunc) }
 
-            if (attributedPreviews.isEmpty()) {
-                base
-            } else {
-                base.copy(previews = base.previews + attributedPreviews)
-            }
+            base.copy(previews = expandedBasePreviews + attributedPreviews)
         }
 
         if (finalMetadata.isEmpty()) return
@@ -133,6 +145,103 @@ class PrecoverProcessor(
         } catch (e: Exception) {
             logger.error("Precover: Failed to write metadata: ${e.message}")
         }
+    }
+
+    private fun expandPreviewsForMetadata(metadata: ComposableMetadata): List<PreviewMetadata> {
+        val scenarios = metadata.parameters
+            .mapNotNull { param ->
+                val limit = param.previewParameter?.limit
+                val baseScenarios = param.previewParameter?.scenarios ?: emptyList()
+                if (limit != null) baseScenarios.take(limit) else baseScenarios
+            }
+            .flatten()
+
+        val basePreviews = metadata.previews
+
+        return if (scenarios.isNotEmpty()) {
+            if (basePreviews.isEmpty()) {
+                scenarios.map { scenario ->
+                    PreviewMetadata(name = scenario, scenario = scenario)
+                }
+            } else {
+                basePreviews.flatMap { preview ->
+                    scenarios.map { scenario ->
+                        val combinedName = if (preview.name.isNullOrBlank()) scenario else "${preview.name} - $scenario"
+                        preview.copy(name = combinedName, scenario = scenario)
+                    }
+                }
+            }
+        } else {
+            // Semantic Naming Enhancement:
+            // If the preview is named BaseName_State, extract "State" as the display name
+            if (metadata.functionName.contains("_") && basePreviews.all { it.name.isNullOrBlank() }) {
+                val state = normalizeScenarioName(metadata.functionName.substringAfter("_").removeSuffix("Preview"))
+                basePreviews.map { it.copy(name = state, scenario = state) }
+            } else {
+                basePreviews
+            }
+        }
+    }
+
+    private fun normalizeScenarioName(name: String): String {
+        val parts = if (name.any { it.isLowerCase() }) {
+            name.split(Regex("(?=[A-Z])|_"))
+        } else {
+            name.split("_")
+        }
+        return parts.filter { it.isNotBlank() }
+            .joinToString("") { part ->
+                part.lowercase().replaceFirstChar { it.uppercase() }
+            }
+    }
+
+    private fun extractScenariosFromProvider(classDecl: KSClassDeclaration): List<String> {
+        val location = classDecl.location as? FileLocation ?: return emptyList()
+        val file = File(location.filePath)
+        if (!file.exists()) return emptyList()
+
+        val lines = file.readLines()
+        val startLine = location.lineNumber - 1
+        if (startLine >= lines.size) return emptyList()
+
+        // Extract class body
+        val classBody = StringBuilder()
+        var braceCount = 0
+        var foundStart = false
+
+        for (i in startLine until lines.size) {
+            val line = lines[i]
+            for (char in line) {
+                if (char == '{') {
+                    braceCount++
+                    foundStart = true
+                } else if (char == '}') {
+                    braceCount--
+                }
+                if (foundStart) classBody.append(char)
+                if (foundStart && braceCount == 0) break
+            }
+            if (foundStart && braceCount == 0) break
+            classBody.append("\n")
+        }
+
+        val content = classBody.toString()
+        // Regex to handle both literal strings and constants (e.g. PreviewScenario.Success)
+        // Group 1: Literal string content
+        // Group 2: Constant identifier (e.g. Success)
+        val regex = Regex("""scenario\s*\(\s*(?:["']([^"']+)["']|(?:[A-Z][a-zA-Z0-9_]*\.)?([A-Z][a-zA-Z0-9_]*))\s*,""")
+        val scenarios = regex.findAll(content).map { match ->
+            val name = match.groupValues[1].takeIf { it.isNotBlank() } ?: match.groupValues[2]
+            normalizeScenarioName(name)
+        }.filter { it.isNotBlank() }.toList()
+
+        if (scenarios.isNotEmpty()) {
+            logger.info("Precover: Extracted ${scenarios.size} scenarios from ${classDecl.simpleName.asString()}")
+        } else {
+            logger.warn("Precover: No scenarios found in ${classDecl.qualifiedName?.asString()}. Use 'scenario(\"Name\", value)' to declare them.")
+        }
+
+        return scenarios
     }
 
     private fun inferCallsFromBody(function: KSFunctionDeclaration): Set<String> {
@@ -193,9 +302,12 @@ class PrecoverProcessor(
             }?.let { annotation ->
                 val providerType = annotation.arguments.find { arg -> arg.name?.asString() == "provider" }?.value as? KSType
                 val limit = annotation.arguments.find { arg -> arg.name?.asString() == "limit" }?.value as? Int
+                val providerQualifiedName = providerType?.declaration?.qualifiedName?.asString() ?: "Unknown"
+
                 PreviewParameterMetadata(
-                    providerType = providerType?.declaration?.qualifiedName?.asString() ?: "Unknown",
+                    providerType = providerQualifiedName,
                     limit = limit,
+                    scenarios = providerScenarios[providerQualifiedName] ?: emptyList(),
                 )
             }
 
@@ -209,6 +321,13 @@ class PrecoverProcessor(
 
         val previews = extractPreviews(function)
         val linkTargets = extractLinkTargets(function)
+        val requiredScenarios = function.annotations.find {
+            it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.RequiresPreviewScenarios"
+        }?.let { annotation ->
+            val values = annotation.arguments.find { it.name?.asString() == "values" }?.value as? List<*>
+            values?.filterIsInstance<String>()?.map { normalizeScenarioName(it) }
+        } ?: emptyList()
+
         val annotations = function.annotations.mapNotNull { it.annotationType.resolve().declaration.qualifiedName?.asString() }.toList()
 
         return ComposableMetadata(
@@ -219,6 +338,7 @@ class PrecoverProcessor(
             parameters = parameters,
             previews = previews,
             linkTargets = linkTargets,
+            requiredScenarios = requiredScenarios,
             annotations = annotations,
             hasDirectPreviews = previews.any { !it.isLink },
         )
@@ -266,12 +386,24 @@ class PrecoverProcessor(
     }
 
     private fun extractPreviews(annotated: KSAnnotated, visited: MutableSet<String> = mutableSetOf()): List<PreviewMetadata> {
+        val scenarioFromScenarioAnnotation = annotated.annotations.find {
+            it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.Scenario"
+        }?.let { it.arguments.find { arg -> arg.name?.asString() == "value" }?.value as? String }
+
+        val scenarioFromLinkAnnotation = annotated.annotations
+            .filter { it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverLink" }
+            .mapNotNull { it.arguments.find { arg -> arg.name?.asString() == "scenario" }?.value as? String }
+            .firstOrNull { it.isNotBlank() }
+
+        val scenario = scenarioFromScenarioAnnotation ?: scenarioFromLinkAnnotation
+        val normalizedScenario = scenario?.let { normalizeScenarioName(it) }
+
         val directPreviews = annotated.annotations
             .filter {
                 val name = it.annotationType.resolve().declaration.qualifiedName?.asString()
                 name == "androidx.compose.ui.tooling.preview.Preview"
             }
-            .map { parsePreviewAnnotation(it) }
+            .map { parsePreviewAnnotation(it).copy(scenario = normalizedScenario) }
 
         val indirectPreviews = annotated.annotations
             .filter {
@@ -290,6 +422,13 @@ class PrecoverProcessor(
                     extractPreviews(declaration, visited)
                 } else {
                     emptyList()
+                }
+            }
+            .map { preview ->
+                if (preview.scenario == null && normalizedScenario != null) {
+                    preview.copy(scenario = normalizedScenario)
+                } else {
+                    preview
                 }
             }
 

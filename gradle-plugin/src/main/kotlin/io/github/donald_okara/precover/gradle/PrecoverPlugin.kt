@@ -27,42 +27,46 @@ class PrecoverPlugin : Plugin<Project> {
             rule.weight.convention(RuleWeight.MEDIUM)
         }
 
+        val ruleOverridesProvider = project.provider {
+            extension.rules.associate {
+                it.type to RuleOverride(it.enabled.get(), it.weight.get())
+            }
+        }
+
+        val metadataFile = project.layout.buildDirectory.file("generated/ksp/debug/resources/io/github/donald_okara/precover/precover-metadata.json")
+
+        val reportTask = project.tasks.register("precoverReport", PrecoverReportTask::class.java) {
+            it.group = "verification"
+            it.description = "Generates Precover coverage reports"
+            it.metadataFile.set(metadataFile)
+            it.outputDirectory.set(project.layout.buildDirectory.dir("reports/precover"))
+            it.modulePath.set(project.path)
+            it.htmlEnabled.set(extension.htmlReportEnabled)
+            it.jsonEnabled.set(extension.jsonReportEnabled)
+            it.ruleOverrides.set(ruleOverridesProvider)
+        }
+
+        project.tasks.register("precoverCheck", PrecoverCheckTask::class.java) {
+            it.group = "verification"
+            it.description = "Checks Precover coverage against threshold"
+            it.metadataFile.set(metadataFile)
+            it.threshold.set(extension.coverageThreshold)
+            it.ruleOverrides.set(ruleOverridesProvider)
+        }
+
         project.afterEvaluate {
-            // Find the KSP task and metadata file for the debug variant
-            // In a real plugin, we would iterate over variants, but for this task we target debug
-            val kspTaskName = "kspDebugKotlin"
-            val kspTask = project.tasks.findByName(kspTaskName)
+            // Support multiple variants by looking for any KSP Kotlin task
+            val kspTasks = project.tasks.matching { it.name.startsWith("ksp") && it.name.endsWith("Kotlin") }
+            if (kspTasks.isNotEmpty()) {
+                reportTask.configure { it.dependsOn(kspTasks) }
+                project.tasks.named("precoverCheck").configure { it.dependsOn(kspTasks) }
 
-            val metadataFile = project.file("build/generated/ksp/debug/resources/io/github/donald_okara/precover/precover-metadata.json")
-
-            val ruleOverridesProvider = project.provider {
-                extension.rules.associate {
-                    it.type to RuleOverride(it.enabled.get(), it.weight.get())
-                }
-            }
-
-            val reportTask = project.tasks.register("precoverReport", PrecoverReportTask::class.java) {
-                it.group = "verification"
-                it.description = "Generates Precover coverage reports"
-                it.metadataFile.set(metadataFile)
-                it.outputDirectory.set(project.layout.buildDirectory.dir("reports/precover"))
-                it.htmlEnabled.set(extension.htmlReportEnabled)
-                it.jsonEnabled.set(extension.jsonReportEnabled)
-                it.ruleOverrides.set(ruleOverridesProvider)
-                if (kspTask != null) it.dependsOn(kspTask)
-            }
-
-            val checkTask = project.tasks.register("precoverCheck", PrecoverCheckTask::class.java) {
-                it.group = "verification"
-                it.description = "Checks Precover coverage against threshold"
-                it.metadataFile.set(metadataFile)
-                it.threshold.set(extension.coverageThreshold)
-                it.ruleOverrides.set(ruleOverridesProvider)
-                if (kspTask != null) it.dependsOn(kspTask)
+                // If it's a non-debug variant, we might need to adjust metadataFile path
+                // But for now, we'll keep the convention or try to find it
             }
 
             // Link to the standard check task
-            project.tasks.findByName("check")?.dependsOn(checkTask)
+            project.tasks.findByName("check")?.dependsOn("precoverCheck")
         }
     }
 }

@@ -23,6 +23,7 @@ import kotlin.reflect.KClass
  * @param target A `KClass` for type-safe linkage (e.g., a NavKey or Marker).
  * @param name The semantic name of the scenario/state for Precover reports.
  * @param group Categorization group.
+ * @param scenario Explicitly maps this preview to a scenario requirement.
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
@@ -32,4 +33,5 @@ annotation class PrecoverLink(
     val target: KClass<*> = Unit::class,
     val name: String = "",
     val group: String = "",
+    val scenario: String = "",
 )

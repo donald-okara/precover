@@ -1,0 +1,65 @@
+name: Precover Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  precover-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      #Leave this in if you are testing from the precover repo. If added to your project, remove it
+      - name: Publish to Maven Local
+        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false --no-daemon
+
+      - name: Run Aggregate Precover Check and Report
+        run: ./gradlew precoverAggregateReport precoverAggregateCheck --no-daemon
+
+      - name: Upload Precover Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: precover-reports
+          path: |
+            build/reports/precover/aggregate/
+            **/build/reports/precover/
+
+      - name: Generate Precover Summary
+        if: always()
+        run: |
+          REPORT_JSON="build/reports/precover/aggregate/aggregate-report.json"
+          if [ -f "$REPORT_JSON" ]; then
+            SCORE=$(jq -r '.overallScore' $REPORT_JSON)
+            FORMATTED_SCORE=$(printf "%.1f" $SCORE)
+            
+            echo "### 📊 Precover Coverage Report" >> $GITHUB_STEP_SUMMARY
+            echo "Project Overall Score: **$FORMATTED_SCORE%**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Module | Score | Components |" >> $GITHUB_STEP_SUMMARY
+            echo "| --- | --- | --- |" >> $GITHUB_STEP_SUMMARY
+            jq -r '.modules[] | "| \(.modulePath) | \(.score)% | \(.componentCount) |"' $REPORT_JSON >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "You can download the full HTML reports from the [Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts) section." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Precover Report Not Found" >> $GITHUB_STEP_SUMMARY
+            echo "The Precover analysis failed to generate a report." >> $GITHUB_STEP_SUMMARY
+          fi
