@@ -27,6 +27,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      #Leave this in if you are testing from the precover repo. If added to your project, remove it
       - name: Publish to Maven Local
         run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false --no-daemon
 
