@@ -17,7 +17,7 @@ class NoPreviewRule : PrecoverRule {
     override val type: RuleType = RuleType.PREVIEW_PRESENCE
     override val weight: RuleWeight = RuleWeight.MANDATORY
 
-    override fun evaluate(composable: ComposableMetadata): List<RuleViolation> = if (composable.previews.isEmpty()) {
+    override fun evaluate(composable: ComposableMetadata): List<RuleViolation> = if (composable.previews.isEmpty() && !composable.noPreviewRequired && !composable.ignoreAllScenarios) {
         listOf(RuleViolation(name, "Composable has no @Preview annotations", Severity.ERROR))
     } else {
         emptyList()

@@ -35,6 +35,8 @@ class RuleEngine(
                 ruleViolations[rule]?.isEmpty() ?: true
             }.map { it.name }
 
+            val isExcluded = composable.noPreviewRequired || composable.ignoreAllScenarios
+
             // If any MANDATORY rule has an ERROR, score is 0
             val hasMandatoryError = applicableRules.any { rule ->
                 val weight = overrides[rule.type]?.weight ?: rule.weight
@@ -44,7 +46,9 @@ class RuleEngine(
 
             // Also treat empty previews as a hard 0 regardless of enabled rules
             // (Only for components - accessories are checked by PrecoverLinkUsageRule)
-            val score = if (hasMandatoryError || (composable.isComponent && composable.previews.isEmpty())) {
+            val score = if (isExcluded) {
+                100f // Excluded components are "perfect" in terms of what they need
+            } else if (hasMandatoryError || (composable.isComponent && composable.previews.isEmpty())) {
                 0f
             } else {
                 var earnedPoints = 0f
@@ -79,14 +83,21 @@ class RuleEngine(
                 requiredScenarios = composable.requiredScenarios,
                 coveredScenarios = composable.previews.mapNotNull { it.scenario },
                 isComponent = composable.isComponent,
+                isExcluded = isExcluded,
             )
         }
 
         val overallScore = if (componentCoverages.isEmpty()) {
             0f
         } else {
-            val componentScores = componentCoverages.filter { it.isComponent }.map { it.score }
-            if (componentScores.isEmpty()) 0f else componentScores.average().toFloat()
+            val scoresToAverage = componentCoverages.filter { it.isComponent && !it.isExcluded }.map { it.score }
+            if (scoresToAverage.isEmpty()) {
+                // If all components are excluded, we can say it's 100% (or maybe 0% if nothing is there)
+                // Let's go with 100% since everything "required" is met.
+                if (componentCoverages.any { it.isComponent }) 100f else 0f
+            } else {
+                scoresToAverage.average().toFloat()
+            }
         }
 
         return CoverageReport(

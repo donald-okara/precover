@@ -4,7 +4,19 @@ import io.github.donald_okara.precover.core.models.CoverageReport
 import io.github.donald_okara.precover.core.models.Severity
 
 class HtmlReporter {
-    fun generate(report: CoverageReport): String = """
+    fun generate(report: CoverageReport): String {
+        val overallScore = if (report.components.isEmpty()) {
+            0f
+        } else {
+            val scoresToAverage = report.components.filter { it.isComponent && !it.isExcluded }.map { it.score }
+            if (scoresToAverage.isEmpty()) {
+                if (report.components.any { it.isComponent }) 100f else 0f
+            } else {
+                scoresToAverage.average().toFloat()
+            }
+        }
+
+        return """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -32,7 +44,7 @@ class HtmlReporter {
                     .summary-info p { margin: 0; color: var(--text-muted); font-size: 16px; }
                     .score-container { text-align: right; }
                     .score-label { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px; }
-                    .score { font-size: 56px; font-weight: 800; line-height: 1; color: ${getScoreColor(report.overallScore)}; }
+                    .score { font-size: 56px; font-weight: 800; line-height: 1; color: ${getScoreColor(overallScore)}; }
                     
                     .section-header { display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border-color); }
                     .section-header h2 { margin: 0; font-size: 22px; flex-grow: 1; }
@@ -55,6 +67,7 @@ class HtmlReporter {
                     .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
                     .badge-scenario { background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; }
                     .badge-accessory { background: #f3e5f5; color: #4a148c; border: 1px solid #e1bee7; }
+                    .badge-excluded { background: #f1f3f5; color: #495057; border: 1px solid #dee2e6; }
 
                     .scenario-section { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #edf2f7; }
                     .section-title { font-size: 13px; font-weight: 700; color: #4a5568; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
@@ -92,7 +105,7 @@ class HtmlReporter {
                         </div>
                         <div class="score-container">
                             <div class="score-label">Overall Coverage</div>
-                            <div class="score">${"%.1f".format(report.overallScore)}%</div>
+                            <div class="score">${"%.1f".format(overallScore)}%</div>
                         </div>
                     </div>
                 </div>
@@ -103,33 +116,36 @@ class HtmlReporter {
                 </div>
 
                 ${report.components.filter { it.isComponent }.joinToString("") { component ->
-        val statusClass = if (component.score > 80) {
-            "good"
-        } else if (component.score > 50) {
-            "warn"
-        } else {
-            "bad"
-        }
-        val hasScenarios = component.requiredScenarios.isNotEmpty() || component.coveredScenarios.isNotEmpty()
-        val coveredScenariosSet = component.coveredScenarios.toSet()
+            val statusClass = if (component.isExcluded) {
+                ""
+            } else if (component.score > 80) {
+                "good"
+            } else if (component.score > 50) {
+                "warn"
+            } else {
+                "bad"
+            }
+            val hasScenarios = component.requiredScenarios.isNotEmpty() || component.coveredScenarios.isNotEmpty()
+            val coveredScenariosSet = component.coveredScenarios.toSet()
 
-        """
+            """
                     <div class="component $statusClass">
                         <div class="component-header">
                             <div class="component-title">
                                 <h3>
                                     ${escapeHtml(component.name)}
+                                    ${if (component.isExcluded) """<span class="badge badge-excluded">Excluded</span>""" else ""}
                                     ${if (hasScenarios) """<span class="badge badge-scenario">Scenarios</span>""" else ""}
                                 </h3>
                                 <small>${escapeHtml(component.packageName)}</small>
                             </div>
-                            <div class="component-score">${"%.1f".format(component.score)}%</div>
+                            <div class="component-score">${if (component.isExcluded) "N/A" else "${"%.1f".format(component.score)}%"}</div>
                         </div>
                         
                         ${if (component.requiredScenarios.isNotEmpty()) {
-            val coveredCount = component.requiredScenarios.count { it in coveredScenariosSet }
-            val coveragePercent = (coveredCount.toFloat() / component.requiredScenarios.size.toFloat()) * 100f
-            """
+                val coveredCount = component.requiredScenarios.count { it in coveredScenariosSet }
+                val coveragePercent = (coveredCount.toFloat() / component.requiredScenarios.size.toFloat()) * 100f
+                """
                             <div class="scenario-section">
                                 <div class="section-title">
                                     <span>Scenario Coverage</span>
@@ -140,33 +156,33 @@ class HtmlReporter {
                                 </div>
                                 <div class="scenario-grid">
                                     ${component.requiredScenarios.joinToString("") { scenario ->
-                val isCovered = scenario in coveredScenariosSet
-                val stateClass = if (isCovered) "covered" else "missing"
-                val icon = if (isCovered) checkIcon() else xIcon()
-                """<div class="scenario-tag $stateClass">$icon ${escapeHtml(formatScenarioName(scenario))}</div>"""
-            }}
+                    val isCovered = scenario in coveredScenariosSet
+                    val stateClass = if (isCovered) "covered" else "missing"
+                    val icon = if (isCovered) checkIcon() else xIcon()
+                    """<div class="scenario-tag $stateClass">$icon ${escapeHtml(formatScenarioName(scenario))}</div>"""
+                }}
                                 </div>
                             </div>
                             """
-        } else if (component.coveredScenarios.isNotEmpty()) {
-            """
+            } else if (component.coveredScenarios.isNotEmpty()) {
+                """
                             <div class="scenario-section">
                                 <div class="section-title">Verified Scenarios</div>
                                 <div class="scenario-grid">
                                     ${component.coveredScenarios.distinct().joinToString("") { scenario ->
-                """<div class="scenario-tag info">${infoIcon()} ${escapeHtml(formatScenarioName(scenario))}</div>"""
-            }}
+                    """<div class="scenario-tag info">${infoIcon()} ${escapeHtml(formatScenarioName(scenario))}</div>"""
+                }}
                                 </div>
                             </div>
                             """
-        } else {
-            ""
-        }}
+            } else {
+                ""
+            }}
 
                         <div class="section-title">Rule Validation</div>
                         <div class="rules-section">
                             ${component.violations.joinToString("") {
-            """
+                """
                                 <div class="rule-item violation">
                                     <div class="rule-status-icon">${alertIcon(it.severity.name)}</div>
                                     <div class="violation-content">
@@ -175,34 +191,34 @@ class HtmlReporter {
                                     </div>
                                 </div>
                                 """
-        }}
+            }}
                             ${component.passedRules.joinToString("") {
-            """
+                """
                                 <div class="rule-item pass">
                                     <div class="rule-status-icon">${checkIcon("var(--success)")}</div>
                                     <span>${escapeHtml(it)}</span>
                                 </div>
                                 """
-        }}
+            }}
                         </div>
                     </div>
                     """
-    }}
+        }}
 
                 ${if (report.components.any { !it.isComponent }) {
-        """
+            """
                 <div class="section-header" style="margin-top: 40px;">
                     <h2>Preview Accessories</h2>
                     <span class="badge badge-accessory">${report.components.count { !it.isComponent }} Items</span>
                 </div>
                 """
-    } else {
-        ""
-    }}
+        } else {
+            ""
+        }}
                 
                 ${report.components.filter { !it.isComponent }.joinToString("") { component ->
-        val statusClass = if (component.score >= 100) "good" else "bad"
-        """
+            val statusClass = if (component.score >= 100) "good" else "bad"
+            """
                     <div class="component $statusClass">
                         <div class="component-header">
                             <div class="component-title">
@@ -218,7 +234,7 @@ class HtmlReporter {
                         <div class="section-title">Validation Details</div>
                         <div class="rules-section">
                             ${component.violations.joinToString("") {
-            """
+                """
                                 <div class="rule-item violation">
                                     <div class="rule-status-icon">${alertIcon(it.severity.name)}</div>
                                     <div class="violation-content">
@@ -227,22 +243,23 @@ class HtmlReporter {
                                     </div>
                                 </div>
                                 """
-        }}
+            }}
                             ${component.passedRules.joinToString("") {
-            """
+                """
                                 <div class="rule-item pass">
                                     <div class="rule-status-icon">${checkIcon("var(--success)")}</div>
                                     <span>${escapeHtml(it)}</span>
                                 </div>
                                 """
-        }}
+            }}
                         </div>
                     </div>
                     """
-    }}
+        }}
             </body>
             </html>
     """.trimIndent()
+    }
 
     private fun getScoreColor(score: Float): String = when {
         score > 80 -> "var(--success)"
@@ -259,7 +276,7 @@ class HtmlReporter {
         else -> infoIcon()
     }
 
-    private fun escapeHtml(value: String): String = value
+    private fun escapeHtml(value: String?): String = (value ?: "")
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
