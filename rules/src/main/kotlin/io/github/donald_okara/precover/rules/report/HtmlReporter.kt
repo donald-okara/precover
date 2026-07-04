@@ -258,7 +258,7 @@ class HtmlReporter {
         }}
             </body>
             </html>
-    """.trimIndent()
+        """.trimIndent()
     }
 
     private fun getScoreColor(score: Float): String = when {

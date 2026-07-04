@@ -15,5 +15,5 @@ package io.github.donald_okara.precover.core.annotations
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
 annotation class PrecoverIgnoreScenarios(
-    val exclude: Array<String> = []
+    val exclude: Array<String> = [],
 )
