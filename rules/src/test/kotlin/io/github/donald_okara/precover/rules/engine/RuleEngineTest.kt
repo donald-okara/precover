@@ -168,9 +168,8 @@ class RuleEngineTest {
         assertEquals(1, report.components.size)
         assertTrue(report.components[0].isExcluded)
         assertEquals(100f, report.components[0].score, 0.1f)
-        // Note: NoPreviewRule still runs but should be skipped for isExcluded if we implemented it that way.
-        // Actually, we implemented NoPreviewRule to skip if noPreviewRequired is true.
-        // Let's check NoPreviewRule again.
+        assertTrue(report.components[0].violations.isEmpty())
+        assertEquals(100f, report.overallScore, 0.1f)
     }
 
     @Test

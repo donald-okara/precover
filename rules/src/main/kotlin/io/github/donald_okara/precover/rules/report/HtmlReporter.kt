@@ -5,16 +5,7 @@ import io.github.donald_okara.precover.core.models.Severity
 
 class HtmlReporter {
     fun generate(report: CoverageReport): String {
-        val overallScore = if (report.components.isEmpty()) {
-            0f
-        } else {
-            val scoresToAverage = report.components.filter { it.isComponent && !it.isExcluded }.map { it.score }
-            if (scoresToAverage.isEmpty()) {
-                if (report.components.any { it.isComponent }) 100f else 0f
-            } else {
-                scoresToAverage.average().toFloat()
-            }
-        }
+        val overallScore = report.overallScore
 
         return """
             <!DOCTYPE html>
