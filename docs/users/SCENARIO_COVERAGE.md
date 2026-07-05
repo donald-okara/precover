@@ -75,3 +75,7 @@ For convenience, Precover provides a `PreviewScenario` object with common scenar
 - `PreviewScenario.ReadOnly` ("ReadOnly")
 
 You can also use any custom string as a scenario name.
+
+## Excluding Scenarios
+
+If certain scenarios are not applicable to a specific component, you can use the `@PrecoverIgnoreScenarios` annotation. See [Exclusions](EXCLUSIONS.md) for details.

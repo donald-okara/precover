@@ -321,12 +321,26 @@ class PrecoverProcessor(
 
         val previews = extractPreviews(function)
         val linkTargets = extractLinkTargets(function)
-        val requiredScenarios = function.annotations.find {
+        val requiredScenariosAnnotation = function.annotations.find {
             it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.RequiresPreviewScenarios"
-        }?.let { annotation ->
+        }
+        val requiredScenarios = requiredScenariosAnnotation?.let { annotation ->
             val values = annotation.arguments.find { it.name?.asString() == "values" }?.value as? List<*>
             values?.filterIsInstance<String>()?.map { normalizeScenarioName(it) }
         } ?: emptyList()
+
+        val ignoreScenariosAnnotation = function.annotations.find {
+            it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverIgnoreScenarios"
+        }
+        val ignoreScenarios = ignoreScenariosAnnotation?.let { annotation ->
+            val values = annotation.arguments.find { it.name?.asString() == "exclude" }?.value as? List<*>
+            values?.filterIsInstance<String>()?.map { normalizeScenarioName(it) }
+        } ?: emptyList()
+        val ignoreAllScenarios = ignoreScenariosAnnotation != null && ignoreScenarios.isEmpty()
+
+        val noPreviewRequired = function.annotations.any {
+            it.annotationType.resolve().declaration.qualifiedName?.asString() == "io.github.donald_okara.precover.core.annotations.PrecoverNoPreviewRequired"
+        }
 
         val annotations = function.annotations.mapNotNull { it.annotationType.resolve().declaration.qualifiedName?.asString() }.toList()
 
@@ -339,6 +353,9 @@ class PrecoverProcessor(
             previews = previews,
             linkTargets = linkTargets,
             requiredScenarios = requiredScenarios,
+            ignoreScenarios = ignoreScenarios,
+            ignoreAllScenarios = ignoreAllScenarios,
+            noPreviewRequired = noPreviewRequired,
             annotations = annotations,
             hasDirectPreviews = previews.any { !it.isLink },
         )

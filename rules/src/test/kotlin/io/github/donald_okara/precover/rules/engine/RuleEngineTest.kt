@@ -123,4 +123,77 @@ class RuleEngineTest {
             },
         )
     }
+
+    @Test
+    fun `test engine respects noPreviewRequired exclusion`() {
+        val engine = RuleEngine()
+        val metadata = listOf(
+            ComposableMetadata(
+                packageName = "com.example",
+                fileName = "Example.kt",
+                functionName = "MyPrimitive",
+                isInternal = false,
+                parameters = emptyList(),
+                previews = emptyList(),
+                noPreviewRequired = true,
+            ),
+        )
+
+        val report = engine.analyze(metadata)
+
+        assertEquals(1, report.components.size)
+        assertTrue(report.components[0].isExcluded)
+        assertEquals(100f, report.components[0].score, 0.1f)
+        assertTrue(report.components[0].violations.isEmpty())
+        assertEquals(100f, report.overallScore, 0.1f)
+    }
+
+    @Test
+    fun `test engine respects ignoreAllScenarios exclusion`() {
+        val engine = RuleEngine()
+        val metadata = listOf(
+            ComposableMetadata(
+                packageName = "com.example",
+                fileName = "Example.kt",
+                functionName = "MyIcon",
+                isInternal = false,
+                parameters = emptyList(),
+                previews = emptyList(),
+                ignoreAllScenarios = true,
+            ),
+        )
+
+        val report = engine.analyze(metadata)
+
+        assertEquals(1, report.components.size)
+        assertTrue(report.components[0].isExcluded)
+        assertEquals(100f, report.components[0].score, 0.1f)
+        assertTrue(report.components[0].violations.isEmpty())
+        assertEquals(100f, report.overallScore, 0.1f)
+    }
+
+    @Test
+    fun `test engine respects partial ignoreScenarios`() {
+        val engine = RuleEngine()
+        val metadata = listOf(
+            ComposableMetadata(
+                packageName = "com.example",
+                fileName = "Example.kt",
+                functionName = "MyComponent",
+                isInternal = false,
+                parameters = emptyList(),
+                requiredScenarios = listOf("Loading", "Success"),
+                ignoreScenarios = listOf("Loading"),
+                previews = listOf(
+                    PreviewMetadata(name = "Success Preview", scenario = "Success"),
+                ),
+            ),
+        )
+
+        val report = engine.analyze(metadata)
+
+        assertEquals(1, report.components.size)
+        // "Loading" is ignored, so Scenario Coverage should pass with just "Success" preview.
+        assertTrue(report.components[0].violations.none { it.ruleName == "Scenario Coverage" })
+    }
 }

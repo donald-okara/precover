@@ -16,10 +16,12 @@ class ScenarioCoverageRule : PrecoverRule {
     override val weight: RuleWeight = RuleWeight.HIGH
 
     override fun evaluate(composable: ComposableMetadata): List<RuleViolation> {
-        if (composable.requiredScenarios.isEmpty()) return emptyList()
+        if (composable.requiredScenarios.isEmpty() || composable.ignoreAllScenarios) return emptyList()
 
         val coveredScenarios = composable.previews.mapNotNull { it.scenario }.toSet()
-        val missingScenarios = composable.requiredScenarios.filter { it !in coveredScenarios }
+        val missingScenarios = composable.requiredScenarios
+            .filter { it !in composable.ignoreScenarios }
+            .filter { it !in coveredScenarios }
 
         return missingScenarios.map { scenario ->
             RuleViolation(

@@ -19,6 +19,7 @@ data class ComponentCoverage(
     val requiredScenarios: List<String> = emptyList(),
     val coveredScenarios: List<String> = emptyList(),
     val isComponent: Boolean = true,
+    val isExcluded: Boolean = false,
 )
 
 @Serializable

@@ -25,6 +25,9 @@ abstract class PrecoverCheckTask : DefaultTask() {
     abstract val threshold: Property<Float>
 
     @get:Input
+    abstract val maxExcludedRatio: Property<Float>
+
+    @get:Input
     abstract val ruleOverrides: MapProperty<RuleType, RuleOverride>
 
     @TaskAction
@@ -39,10 +42,19 @@ abstract class PrecoverCheckTask : DefaultTask() {
         val currentScore = report.overallScore
         val targetThreshold = threshold.get()
 
+        val totalComponents = report.components.count { it.isComponent }
+        val excludedComponents = report.components.count { it.isComponent && it.isExcluded }
+        val currentExcludedRatio = if (totalComponents > 0) excludedComponents.toFloat() / totalComponents else 0f
+        val maxRatio = maxExcludedRatio.get()
+
         if (currentScore < targetThreshold) {
             throw GradleException("Precover: Coverage score (${"%.1f".format(currentScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%)")
-        } else {
-            logger.lifecycle("Precover: Coverage check passed! (${"%.1f".format(currentScore)}% >= ${"%.1f".format(targetThreshold)}%)")
         }
+
+        if (currentExcludedRatio > maxRatio) {
+            throw GradleException("Precover: Excluded components ratio (${"%.1f".format(currentExcludedRatio * 100)}%) exceeds maximum allowed (${"%.1f".format(maxRatio * 100)}%)")
+        }
+
+        logger.lifecycle("Precover: Coverage check passed! (Score: ${"%.1f".format(currentScore)}% >= ${"%.1f".format(targetThreshold)}%, Excluded: ${"%.1f".format(currentExcludedRatio * 100)}% <= ${"%.1f".format(maxRatio * 100)}%)")
     }
 }

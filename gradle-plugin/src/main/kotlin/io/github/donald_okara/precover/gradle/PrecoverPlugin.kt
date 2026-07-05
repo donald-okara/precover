@@ -14,6 +14,7 @@ class PrecoverPlugin : Plugin<Project> {
         val extension = project.extensions.create("precover", PrecoverExtension::class.java)
 
         extension.coverageThreshold.convention(80f)
+        extension.maxExcludedRatio.convention(1.0f)
         extension.htmlReportEnabled.convention(true)
         extension.jsonReportEnabled.convention(true)
 
@@ -51,6 +52,7 @@ class PrecoverPlugin : Plugin<Project> {
             it.description = "Checks Precover coverage against threshold"
             it.metadataFile.set(metadataFile)
             it.threshold.set(extension.coverageThreshold)
+            it.maxExcludedRatio.set(extension.maxExcludedRatio)
             it.ruleOverrides.set(ruleOverridesProvider)
         }
 

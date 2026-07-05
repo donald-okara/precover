@@ -13,6 +13,7 @@ import javax.inject.Inject
 
 abstract class PrecoverExtension @Inject constructor(objects: ObjectFactory) {
     abstract val coverageThreshold: Property<Float>
+    abstract val maxExcludedRatio: Property<Float>
     abstract val htmlReportEnabled: Property<Boolean>
     abstract val jsonReportEnabled: Property<Boolean>
 

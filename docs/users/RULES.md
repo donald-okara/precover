@@ -47,3 +47,11 @@ Checks if the component is tested with accessibility settings in mind. It expect
 Checks if the component is previewed on different screen configurations. It looks for previews that explicitly define a `device` string, or set `widthDp` / `heightDp`.
 
 **Recommendation**: For complex screens, add a preview using a tablet device (e.g., `device = Devices.PIXEL_TABLET`) to ensure adaptive layouts work as expected.
+
+---
+
+## Exclusion Rules
+
+Components can be excluded from these rules using special annotations. See [Exclusions](EXCLUSIONS.md) for more details.
+- **@PrecoverNoPreviewRequired**: Completely excludes a component from coverage scoring.
+- **@PrecoverIgnoreScenarios**: Excludes a component from scenario validation (optionally targeting specific scenarios).

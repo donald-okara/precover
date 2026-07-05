@@ -51,6 +51,8 @@ import io.github.donald_okara.precover.rules.engine.RuleWeight
 precover {
     // Threshold for precoverCheck task (0-100)
     coverageThreshold.set(80f)
+    // Maximum allowed ratio of excluded components (0.0 to 1.0)
+    maxExcludedRatio.set(0.2f)
     // Enable/Disable report formats
     htmlReportEnabled.set(true)
     jsonReportEnabled.set(true)
