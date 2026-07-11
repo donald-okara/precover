@@ -9,22 +9,25 @@ plugins {
 // using the precoverRoot.subprojects block. This avoids compilation errors
 // when the plugin is disabled.
 //
-// If we want module-specific overrides without static imports and remaining 
+// If we want module-specific overrides without static imports and remaining
 // robust when the plugin is disabled, we can use this pattern:
 pluginManager.withPlugin("io.github.donald-okara.precover") {
     val extension = extensions.getByName("precover")
     try {
         val clz = extension.javaClass
-        
+
         // coverageThreshold.set(75f)
         (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
 
         // THEME_COVERAGE { enable() } - Overriding the root disable
-        clz.getMethod("THEME_COVERAGE", org.gradle.api.Action::class.java).invoke(extension, object : org.gradle.api.Action<Any> {
-            override fun execute(ruleConfig: Any) {
-                ruleConfig.javaClass.getMethod("enable").invoke(ruleConfig)
-            }
-        })
+        clz.getMethod("THEME_COVERAGE", org.gradle.api.Action::class.java).invoke(
+            extension,
+            object : org.gradle.api.Action<Any> {
+                override fun execute(ruleConfig: Any) {
+                    ruleConfig.javaClass.getMethod("enable").invoke(ruleConfig)
+                }
+            },
+        )
     } catch (e: Exception) {
         // Fallback for bootstrap
     }
