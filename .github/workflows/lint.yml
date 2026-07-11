@@ -34,11 +34,8 @@ jobs:
       - name: Publish to Maven Local
         run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
 
-      - name: Check Spotless
-        run: ./gradlew spotlessCheck -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
-
       - name: Build and Test
-        run: ./gradlew build -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
+        run: ./gradlew spotlessCheck build -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
 
       - name: Run Precover Report
         run: ./gradlew :app:precoverReport -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon

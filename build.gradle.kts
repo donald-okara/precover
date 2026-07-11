@@ -121,13 +121,8 @@ tasks.register("printVersion") {
 if (isPrecoverEnabled) {
     apply(plugin = "io.github.donald-okara.precover.root")
 
-    val extension = extensions.getByName("precoverRoot")
-    try {
-        val method = extension::class.java.getMethod("getAggregateCoverageThreshold")
-        val property = method.invoke(extension) as Property<Float>
-        property.set(80f)
-    } catch (e: Exception) {
-        // Plugin not built yet
+    extensions.configure<io.github.donald_okara.precover.gradle.PrecoverRootExtension>("precoverRoot") {
+        aggregateCoverageThreshold.set(80f)
     }
 }
 
