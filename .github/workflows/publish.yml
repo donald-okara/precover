@@ -30,8 +30,17 @@ jobs:
 
       - name: Calculate Version
         id: get_version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+          if [ "$REF_TYPE" = "tag" ]; then
+            VERSION="$REF_NAME"
+            # Remove leading 'v' if present
+            VERSION=${VERSION#v}
+          else
+            VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Publish to Maven Central

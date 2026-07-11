@@ -1,6 +1,8 @@
 pluginManagement {
     repositories {
-        mavenLocal()
+        if (System.getenv("PRECOVER_LOCAL_DEV") != null) {
+            mavenLocal()
+        }
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -12,6 +14,9 @@ plugins {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        if (System.getenv("PRECOVER_LOCAL_DEV") != null) {
+            mavenLocal()
+        }
         google()
         mavenCentral()
     }

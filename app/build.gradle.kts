@@ -1,22 +1,35 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
+    alias(libs.plugins.google.devtools.ksp)
 }
 
-if (project.findProperty("precover.enabled") != "false") {
-    // Note: The root plugin applies this, but we apply it here too for safety/clarity
-    // or if the root plugin isn't applied.
+// Precover configuration is now managed globally in the root build.gradle.kts
+// using the precoverRoot.subprojects block. This avoids compilation errors
+// when the plugin is disabled.
+//
+// If we want module-specific overrides without static imports and remaining
+// robust when the plugin is disabled, we can use this pattern:
+pluginManager.withPlugin("io.github.donald-okara.precover") {
+    val extension = extensions.getByName("precover")
     try {
-        apply(plugin = "io.github.donald-okara.precover")
-        val extension = extensions.getByName("precover")
-        val clz = extension::class.java
+        val clz = extension.javaClass
+
+        // coverageThreshold.set(75f)
         (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
-        (clz.getMethod("getHtmlReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
-        (clz.getMethod("getJsonReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+
+        // THEME_COVERAGE { enable() } - Overriding the root disable
+        clz.getMethod("THEME_COVERAGE", org.gradle.api.Action::class.java).invoke(
+            extension,
+            object : org.gradle.api.Action<Any> {
+                override fun execute(ruleConfig: Any) {
+                    ruleConfig.javaClass.getMethod("enable").invoke(ruleConfig)
+                }
+            },
+        )
     } catch (e: Exception) {
-        // Plugin not built yet
+        project.logger.warn("Precover configuration failed: ${e.message}", e)
     }
 }
 
@@ -51,6 +64,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
@@ -101,6 +115,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     "ksp"(libs.androidx.room.compiler)
     "ksp"(libs.moshi.kotlin.codegen)
-    implementation(project(":core"))
-    "ksp"(project(":ksp"))
 }

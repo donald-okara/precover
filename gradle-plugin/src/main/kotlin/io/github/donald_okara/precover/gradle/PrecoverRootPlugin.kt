@@ -7,7 +7,17 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 
+/**
+ * Root plugin for Precover that orchestrates aggregate reporting and global configuration.
+ *
+ * This plugin should be applied to the root project. It automatically configures
+ * Android subprojects with the Precover analysis plugin, sets up KSP, and adds
+ * required dependencies.
+ */
 class PrecoverRootPlugin : Plugin<Project> {
+    /**
+     * Applies the root plugin to the specified [rootProject].
+     */
     override fun apply(rootProject: Project) {
         if (rootProject != rootProject.rootProject) {
             rootProject.logger.warn("Precover: The root plugin should only be applied to the root project.")
@@ -34,19 +44,44 @@ class PrecoverRootPlugin : Plugin<Project> {
         }
 
         rootProject.subprojects { subproject ->
-            // Use withId to avoid afterEvaluate where possible
             val androidPluginHandler = { _: Any ->
                 // Automatically apply the base plugin if not already present
                 if (!subproject.plugins.hasPlugin("io.github.donald-okara.precover")) {
                     subproject.plugins.apply("io.github.donald-okara.precover")
                 }
+
+                // Automatically apply KSP if not already present
+                if (!subproject.plugins.hasPlugin("com.google.devtools.ksp")) {
+                    subproject.plugins.apply("com.google.devtools.ksp")
+                }
+
+                // Add dependencies
+                val version = rootProject.version.toString()
+
+                val coreProject = rootProject.findProject(":core")
+                if (coreProject != null) {
+                    subproject.dependencies.add("implementation", coreProject)
+                } else {
+                    subproject.dependencies.add("implementation", "io.github.donald-okara:core:$version")
+                }
+
+                val kspProject = rootProject.findProject(":ksp")
+                if (kspProject != null) {
+                    subproject.dependencies.add("ksp", kspProject)
+                } else {
+                    subproject.dependencies.add("ksp", "io.github.donald-okara:ksp:$version")
+                }
+                Unit
             }
 
             subproject.plugins.withId("com.android.application", androidPluginHandler)
             subproject.plugins.withId("com.android.library", androidPluginHandler)
 
-            // Link submodule report to root aggregation lazily for any project with the plugin
+            // Apply global configuration from precoverRoot.subprojects
             subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
+                val subExtension = subproject.extensions.getByType(PrecoverExtension::class.java)
+                extension.getSubprojectsAction()?.execute(subExtension)
+
                 val reportTaskProvider = subproject.tasks.named("precoverReport", PrecoverReportTask::class.java)
 
                 reportTaskProvider.configure { reportTask ->
