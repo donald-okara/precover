@@ -6,7 +6,7 @@ plugins {
 }
 
 if (project.findProperty("precover.enabled") != "false") {
-    // Note: The root plugin applies this, but we apply it here too for safety/clarity 
+    // Note: The root plugin applies this, but we apply it here too for safety/clarity
     // or if the root plugin isn't applied.
     try {
         apply(plugin = "io.github.donald-okara.precover")
