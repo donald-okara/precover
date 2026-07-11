@@ -36,10 +36,15 @@ jobs:
 
       #Leave this in if you are testing from the precover repo. If added to your project, remove it
       - name: Publish to Maven Local
-        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
+        env:
+          PRECOVER_LOCAL_DEV: true
+        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
 
       - name: Run Aggregate Precover Check and Report
-        run: ./gradlew precoverAggregateReport precoverAggregateCheck -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
+        env:
+          PRECOVER_LOCAL_DEV: true
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g"
+        run: ./gradlew precoverAggregateReport precoverAggregateCheck -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
 
       - name: Upload Precover Reports
         if: always()

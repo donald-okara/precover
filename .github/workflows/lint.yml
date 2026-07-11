@@ -32,10 +32,17 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Publish to Maven Local
-        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
+        env:
+          PRECOVER_LOCAL_DEV: true
+        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
 
       - name: Build and Test
-        run: ./gradlew spotlessCheck build -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
+        env:
+          PRECOVER_LOCAL_DEV: true
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError"
+        run: ./gradlew spotlessCheck build -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
 
       - name: Run Precover Report
-        run: ./gradlew :app:precoverReport -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
+        env:
+          PRECOVER_LOCAL_DEV: true
+        run: ./gradlew :app:precoverReport -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
