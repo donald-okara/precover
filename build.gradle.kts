@@ -51,10 +51,11 @@ allprojects {
         )
 
     propertiesToMap.forEach { (source, target) ->
-        val value = project.findProperty(target)?.toString()
-            ?: project.findProperty(source)?.toString()
-            ?: localProperties.getProperty(source)
-            ?: localProperties.getProperty(target)
+        val value =
+            project.findProperty(target)?.toString()
+                ?: project.findProperty(source)?.toString()
+                ?: localProperties.getProperty(source)
+                ?: localProperties.getProperty(target)
 
         if (value != null) {
             if (target == "signingInMemoryKey") {
