@@ -1,10 +1,12 @@
 package io.github.donald_okara.precover.gradle.tasks
 
+import io.github.donald_okara.precover.core.models.BaselineData
 import io.github.donald_okara.precover.core.models.CoverageReport
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
@@ -18,6 +20,14 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
 
     @get:Input
     abstract val threshold: Property<Float>
+
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val baselineFile: RegularFileProperty
+
+    @get:Input
+    abstract val useBaseline: Property<Boolean>
 
     @TaskAction
     fun run() {
@@ -43,10 +53,37 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
         val aggregateScore = scores.average().toFloat()
         val targetThreshold = threshold.get()
 
+        val baselineScore = if (useBaseline.get()) getBaselineScore() else null
+
         if (aggregateScore < targetThreshold) {
-            throw GradleException("Precover: Project aggregate score (${"%.1f".format(aggregateScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%)")
+            if (baselineScore != null && aggregateScore >= baselineScore) {
+                logger.lifecycle("Precover: Project aggregate score (${"%.1f".format(aggregateScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%) but meets baseline (${"%.1f".format(baselineScore)}%).")
+            } else {
+                val message = if (baselineScore != null) {
+                    "Precover: Project aggregate score (${"%.1f".format(aggregateScore)}%) is below both threshold (${"%.1f".format(targetThreshold)}%) and baseline (${"%.1f".format(baselineScore)}%)"
+                } else if (useBaseline.get()) {
+                    "Precover: Project aggregate score (${"%.1f".format(aggregateScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%) and no aggregate baseline found"
+                } else {
+                    "Precover: Project aggregate score (${"%.1f".format(aggregateScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%)"
+                }
+                throw GradleException(message)
+            }
         } else {
             logger.lifecycle("Precover: Project aggregate check passed! (${"%.1f".format(aggregateScore)}% >= ${"%.1f".format(targetThreshold)}%)")
+        }
+    }
+
+    private fun getBaselineScore(): Float? {
+        val file = baselineFile.orNull?.asFile ?: return null
+        if (!file.exists()) return null
+
+        return try {
+            val json = Json { ignoreUnknownKeys = true }
+            val data = json.decodeFromString(BaselineData.serializer(), file.readText())
+            data.baselines[":aggregate"]?.lastOrNull()?.score
+        } catch (e: Exception) {
+            logger.warn("Precover: Failed to parse baseline file: ${e.message}")
+            null
         }
     }
 }

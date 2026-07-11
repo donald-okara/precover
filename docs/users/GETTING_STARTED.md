@@ -127,3 +127,110 @@ precoverRoot {
 ### Module Level
 - `precoverReport`: Generates coverage reports for a specific module.
 - `precoverCheck`: Verifies coverage for a specific module against its threshold. This is automatically linked to the standard `check` task.
+
+## Baseline Workflow
+
+The Baseline Workflow allows you to use your current coverage as a "floor" for future checks. This is useful when you want to prevent coverage from dropping, but aren't ready to meet a hard global threshold yet.
+
+### 1. Record a Baseline
+Run the following command to record your current coverage as the baseline:
+
+```bash
+./gradlew precoverUpdateBaseline
+```
+
+This will create or update `precover/baselines.json` at your project root. This file should be committed to version control.
+
+### 2. Coverage Checks
+Once a baseline is recorded, `precoverCheck` will pass if:
+- Current score >= `coverageThreshold`
+- **OR** Current score >= Recorded Baseline
+
+### 3. Improving Baselines
+The `precoverUpdateBaseline` task only updates the baseline if the current score is **higher** than the existing one. This helps you track and maintain improvements over time.
+
+### 4. Configuration
+You can disable the baseline workflow or change the file location:
+
+```kotlin
+precover {
+    // Disable baseline comparison (default is true)
+    useBaseline.set(false)
+    
+    // Custom baseline file location
+    baselineFile.set(layout.projectDirectory.file("custom-baselines.json"))
+}
+```
+
+## Continuous Integration (CI/CD)
+
+You can easily integrate Precover into your GitHub Actions workflows to automate coverage checks and baseline updates.
+
+> [!IMPORTANT]
+> The workflow examples below contain a **"Publish to Maven Local (Dev Only)"** step. This is specific to the Precover repository's development environment. **When copying these workflows to your own project, you should remove this step and the `PRECOVER_LOCAL_DEV` environment variable.**
+
+### 1. Precover Check Workflow
+This workflow runs on every pull request to ensure that the new changes meet the required coverage threshold or baseline.
+
+```yaml
+name: Precover Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  precover-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Run Precover Check
+        run: ./gradlew precoverAggregateReport precoverAggregateCheck
+```
+
+### 2. Update Baseline Workflow
+This workflow automatically updates your coverage baseline when changes are merged into the `main` branch.
+
+```yaml
+name: Update Precover Baseline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  update-baseline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Run Precover Update Baseline
+        run: ./gradlew precoverUpdateBaseline
+
+      - name: Commit and Push Baseline
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep -q "precover/baselines.json"; then
+            git add precover/baselines.json
+            git commit -m "chore: update precover baseline [skip ci]"
+            git push origin main
+          fi
+```

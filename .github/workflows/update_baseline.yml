@@ -1,0 +1,62 @@
+name: Update Precover Baseline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-baseline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Calculate Version
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # NOTE: The following step is specific to the Precover repository for development.
+      # If you are copying this workflow to your own project, you should remove this step.
+      - name: Publish to Maven Local (Dev Only)
+        env:
+          PRECOVER_LOCAL_DEV: true
+        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
+
+      - name: Run Precover Update Baseline
+        env:
+          # If copying to your project, you likely won't need PRECOVER_LOCAL_DEV
+          PRECOVER_LOCAL_DEV: true
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-Xmx4g"
+        run: ./gradlew precoverUpdateBaseline -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon --no-configuration-cache
+
+      - name: Commit and Push Baseline
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if baselines.json has changed
+          if git status --porcelain | grep -q "precover/baselines.json"; then
+            git add precover/baselines.json
+            git commit -m "chore: update precover baseline [skip ci]"
+            git push origin main
+          else
+            echo "No baseline changes detected."
+          fi

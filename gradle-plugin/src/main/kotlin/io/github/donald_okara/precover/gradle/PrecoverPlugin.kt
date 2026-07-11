@@ -3,6 +3,7 @@ package io.github.donald_okara.precover.gradle
 import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.gradle.tasks.PrecoverCheckTask
 import io.github.donald_okara.precover.gradle.tasks.PrecoverReportTask
+import io.github.donald_okara.precover.gradle.tasks.PrecoverUpdateBaselineTask
 import io.github.donald_okara.precover.rules.engine.RuleOverride
 import io.github.donald_okara.precover.rules.engine.RuleWeight
 import org.gradle.api.Plugin
@@ -27,6 +28,8 @@ class PrecoverPlugin : Plugin<Project> {
         extension.maxExcludedRatio.convention(1.0f)
         extension.htmlReportEnabled.convention(true)
         extension.jsonReportEnabled.convention(true)
+        extension.baselineFile.convention(project.rootProject.layout.projectDirectory.file("precover/baselines.json"))
+        extension.useBaseline.convention(true)
 
         // Pre-populate all rules for easier configuration
         RuleType.entries.forEach { type ->
@@ -35,7 +38,7 @@ class PrecoverPlugin : Plugin<Project> {
 
         extension.rules.all { rule ->
             rule.enabled.convention(true)
-            rule.weight.convention(RuleWeight.MEDIUM)
+            rule.weight.convention(RuleWeight.MEDIUM) 
         }
 
         val ruleOverridesProvider = project.provider {
@@ -57,13 +60,24 @@ class PrecoverPlugin : Plugin<Project> {
             it.ruleOverrides.set(ruleOverridesProvider)
         }
 
+        project.tasks.register("precoverUpdateBaseline", PrecoverUpdateBaselineTask::class.java) {
+            it.group = "verification"
+            it.description = "Updates the Precover coverage baseline for this module"
+            it.reportFile.set(reportTask.flatMap { report -> report.outputDirectory.file("precover-report.json") })
+            it.baselineFile.set(extension.baselineFile)
+            it.modulePath.set(project.path)
+        }
+
         project.tasks.register("precoverCheck", PrecoverCheckTask::class.java) {
             it.group = "verification"
-            it.description = "Checks Precover coverage against threshold"
+            it.description = "Checks Precover coverage against threshold or baseline"
             it.metadataFile.set(metadataFile)
             it.threshold.set(extension.coverageThreshold)
             it.maxExcludedRatio.set(extension.maxExcludedRatio)
             it.ruleOverrides.set(ruleOverridesProvider)
+            it.baselineFile.set(extension.baselineFile)
+            it.modulePath.set(project.path)
+            it.useBaseline.set(extension.useBaseline)
         }
 
         project.afterEvaluate {
@@ -72,6 +86,7 @@ class PrecoverPlugin : Plugin<Project> {
             if (kspTasks.isNotEmpty()) {
                 reportTask.configure { it.dependsOn(kspTasks) }
                 project.tasks.named("precoverCheck").configure { it.dependsOn(kspTasks) }
+                project.tasks.named("precoverUpdateBaseline").configure { it.dependsOn(kspTasks) }
 
                 // If it's a non-debug variant, we might need to adjust metadataFile path
                 // But for now, we'll keep the convention or try to find it
