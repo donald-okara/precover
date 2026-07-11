@@ -5,12 +5,19 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
 }
 
-// Precover is automatically applied and configured by the root plugin for Android projects.
-// Use this block if you need to override module-specific settings.
-extensions.configure<io.github.donald_okara.precover.gradle.PrecoverExtension>("precover") {
-    coverageThreshold.set(75f)
-    htmlReportEnabled.set(true)
-    jsonReportEnabled.set(true)
+if (project.findProperty("precover.enabled") != "false") {
+    // Note: The root plugin applies this, but we apply it here too for safety/clarity 
+    // or if the root plugin isn't applied.
+    try {
+        apply(plugin = "io.github.donald-okara.precover")
+        val extension = extensions.getByName("precover")
+        val clz = extension::class.java
+        (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
+        (clz.getMethod("getHtmlReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+        (clz.getMethod("getJsonReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
+    } catch (e: Exception) {
+        // Plugin not built yet
+    }
 }
 
 android {
