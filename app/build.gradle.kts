@@ -1,3 +1,5 @@
+import io.github.donald_okara.precover.rules.engine.RuleWeight
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -13,6 +15,32 @@ if (project.findProperty("precover.enabled") != "false") {
         (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
     } catch (e: Exception) {
         // Plugin not built yet or not applied
+    }
+}
+
+
+precover {
+    // Threshold for precoverCheck task (0-100)
+    coverageThreshold.set(80f)
+    // Maximum allowed ratio of excluded components (0.0 to 1.0)
+    maxExcludedRatio.set(0.2f)
+    // Enable/Disable report formats
+    htmlReportEnabled.set(true)
+    jsonReportEnabled.set(true)
+
+    // Configure rules using DSL labels
+    PREVIEW_PRESENCE {
+        enable()
+        mandatory()
+    }
+
+    THEME_COVERAGE {
+        disable()
+    }
+
+    FONT_SCALE_COVERAGE {
+        enable()
+        weight.set(RuleWeight.MEDIUM)
     }
 }
 
