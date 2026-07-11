@@ -1,5 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+
 buildscript {
+    val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+
     repositories {
         mavenLocal()
         google()
@@ -7,7 +12,7 @@ buildscript {
     }
     dependencies {
         if (project.findProperty("precover.enabled") != "false") {
-            classpath("io.github.donald-okara:gradle-plugin:1.0.0")
+            classpath("io.github.donald-okara:gradle-plugin:$projectVersion")
         }
     }
 }
@@ -19,6 +24,56 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization) apply false
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.spotless)
+    alias(libs.plugins.vanniktech.maven.publish) apply false
+}
+
+// Load credentials from local.properties if they exist
+val localProperties =
+    java.util.Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) {
+            file.inputStream().use { load(it) }
+        }
+    }
+
+allprojects {
+    version = projectVersion
+
+    // Map local.properties to the expected Vanniktech property names
+    localProperties.forEach { (key, value) ->
+        val stringKey = key.toString()
+        val stringValue = value.toString()
+        when (stringKey) {
+            "ossrhUsername" -> {
+                extra.set("mavenCentralUsername", stringValue)
+            }
+
+            "ossrhPassword" -> {
+                extra.set("mavenCentralPassword", stringValue)
+            }
+
+            "signingKey" -> {
+                val decodedKey =
+                    String(
+                        java.util.Base64
+                            .getDecoder()
+                            .decode(stringValue.trim()),
+                    )
+                extra.set("signingInMemoryKey", decodedKey)
+            }
+
+            "signingPassword" -> {
+                extra.set("signingInMemoryKeyPassword", stringValue)
+            }
+        }
+    }
+}
+
+tasks.register("printVersion") {
+    val versionProvider = provider { project.version.toString() }
+    doLast {
+        println("Project Version: ${versionProvider.get()}")
+    }
 }
 
 if (project.findProperty("precover.enabled") != "false") {

@@ -44,6 +44,7 @@ moshiKotlinCodegen = "1.15.2"
 datastorePreferences = "1.1.7"
 material = "1.13.0"
 uiToolingPreviewJvmstubs = "1.11.3"
+vanniktech-maven-publish = "0.30.0"
 
 [libraries]
 androidx-compose-ui-tooling-preview-jvmstubs = { module = "androidx.compose.ui:ui-tooling-preview-jvmstubs", version.ref = "uiToolingPreviewJvmstubs" }
@@ -105,4 +106,5 @@ google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDev
 jetbrains-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "jetbrainsKotlinPluginSerialization" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+vanniktech-maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }
 
