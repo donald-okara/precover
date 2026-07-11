@@ -37,7 +37,7 @@ mavenPublishing {
         }
     }
 
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01)
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
     if (project.findProperty("signingInMemoryKey") != null) {
         signAllPublications()
     }

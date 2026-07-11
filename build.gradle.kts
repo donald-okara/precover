@@ -29,17 +29,6 @@ val gitVersion: Provider<String> =
         }.standardOutput.asText
         .map { it.trim().removePrefix("v") }
 
-allprojects {
-    version = gitVersion.getOrElse("0.1.0-SNAPSHOT")
-}
-
-tasks.register("printVersion") {
-    val versionProvider = provider { project.version.toString() }
-    doLast {
-        println("Project Version: ${versionProvider.get()}")
-    }
-}
-
 // Load credentials from local.properties if they exist
 val localProperties =
     java.util.Properties().apply {
@@ -49,32 +38,43 @@ val localProperties =
         }
     }
 
-// Map local.properties to the expected Vanniktech property names
-localProperties.forEach { (key, value) ->
-    val stringKey = key.toString()
-    val stringValue = value.toString()
-    when (stringKey) {
-        "ossrhUsername" -> {
-            extra.set("mavenCentralUsername", stringValue)
-        }
+allprojects {
+    version = gitVersion.getOrElse("0.1.0-SNAPSHOT")
 
-        "ossrhPassword" -> {
-            extra.set("mavenCentralPassword", stringValue)
-        }
+    // Map local.properties to the expected Vanniktech property names
+    localProperties.forEach { (key, value) ->
+        val stringKey = key.toString()
+        val stringValue = value.toString()
+        when (stringKey) {
+            "ossrhUsername" -> {
+                extra.set("mavenCentralUsername", stringValue)
+            }
 
-        "signingKey" -> {
-            val decodedKey =
-                String(
-                    java.util.Base64
-                        .getDecoder()
-                        .decode(stringValue.trim()),
-                )
-            extra.set("signingInMemoryKey", decodedKey)
-        }
+            "ossrhPassword" -> {
+                extra.set("mavenCentralPassword", stringValue)
+            }
 
-        "signingPassword" -> {
-            extra.set("signingInMemoryKeyPassword", stringValue)
+            "signingKey" -> {
+                val decodedKey =
+                    String(
+                        java.util.Base64
+                            .getDecoder()
+                            .decode(stringValue.trim()),
+                    )
+                extra.set("signingInMemoryKey", decodedKey)
+            }
+
+            "signingPassword" -> {
+                extra.set("signingInMemoryKeyPassword", stringValue)
+            }
         }
+    }
+}
+
+tasks.register("printVersion") {
+    val versionProvider = provider { project.version.toString() }
+    doLast {
+        println("Project Version: ${versionProvider.get()}")
     }
 }
 
