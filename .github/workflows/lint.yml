@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -23,14 +25,20 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Calculate Version
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Publish to Maven Local
-        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false --no-daemon
+        run: ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
 
       - name: Check Spotless
-        run: ./gradlew spotlessCheck --no-daemon
+        run: ./gradlew spotlessCheck -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
 
       - name: Build and Test
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon
 
       - name: Run Precover Report
-        run: ./gradlew :app:precoverReport --no-daemon
+        run: ./gradlew :app:precoverReport -Pprecover.version=${{ steps.get_version.outputs.version }} --no-daemon

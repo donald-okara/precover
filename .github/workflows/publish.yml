@@ -29,8 +29,14 @@ jobs:
         with:
           cache-read-only: true
 
+      - name: Calculate Version
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Publish to Maven Central
-        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        run: ./gradlew publishAndReleaseToMavenCentral -Pprecover.version=${{ steps.get_version.outputs.version }} --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.OSSRH_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.OSSRH_PASSWORD }}

@@ -1,5 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+
 buildscript {
+    val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+
     repositories {
         mavenLocal()
         google()
@@ -7,7 +12,7 @@ buildscript {
     }
     dependencies {
         if (project.findProperty("precover.enabled") != "false") {
-            classpath("io.github.donald-okara:gradle-plugin:1.0.0")
+            classpath("io.github.donald-okara:gradle-plugin:$projectVersion")
         }
     }
 }
@@ -22,13 +27,6 @@ plugins {
     alias(libs.plugins.vanniktech.maven.publish) apply false
 }
 
-val gitVersion: Provider<String> =
-    providers
-        .exec {
-            commandLine("git", "describe", "--tags", "--always", "--dirty")
-        }.standardOutput.asText
-        .map { it.trim().removePrefix("v") }
-
 // Load credentials from local.properties if they exist
 val localProperties =
     java.util.Properties().apply {
@@ -39,7 +37,7 @@ val localProperties =
     }
 
 allprojects {
-    version = gitVersion.getOrElse("0.1.0-SNAPSHOT")
+    version = projectVersion
 
     // Map local.properties to the expected Vanniktech property names
     localProperties.forEach { (key, value) ->
