@@ -6,64 +6,18 @@ on:
       - 'v*'
       - '[0-9]*'
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Select existing tag to publish'
-        required: true
-        type: choice
-        options:
-          - '1.0.0'
 
 permissions:
-  contents: write
-  workflows: write
+  contents: read
 
 jobs:
-  update-tags:
-    # Only run this job if triggered by a push (to update the dropdown)
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: dev # Using dev as the base branch
-          fetch-depth: 0
-
-      - name: Get tags and update workflow
-        run: |
-          # Get top 10 tags sorted by version
-          TAGS=$(git tag --sort=-v:refname | head -n 10 | jq -R . | jq -s .)
-          
-          # Update publish.yml using yq
-          yq -i ".on.workflow_dispatch.inputs.tag.options = $TAGS" .github/workflows/publish.yml
-
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/publish.yml
-          if git commit -m "chore: update publish tags dropdown"; then
-            git push origin dev
-          else
-            echo "No changes to commit"
-          fi
-
   publish:
-    # Run for manual trigger OR as a downstream job after update-tags (for push trigger)
-    # Note: If triggered by push, we wait for update-tags to finish, although update-tags 
-    # just updates the UI for the NEXT run. We still want to publish the CURRENT tag.
-    if: |
-      always() && 
-      (github.event_name == 'workflow_dispatch' || github.event_name == 'push')
-    needs: [update-tags]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -73,17 +27,11 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: true
 
       - name: Calculate Version
         id: get_version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION=$(echo "${{ github.event.inputs.tag }}" | sed 's/^v//')
-          else
-            VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
-          fi
+          VERSION=$(git describe --tags --always --dirty | sed 's/^v//')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Publish to Maven Central
