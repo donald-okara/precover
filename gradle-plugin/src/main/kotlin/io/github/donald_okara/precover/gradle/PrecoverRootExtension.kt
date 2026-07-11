@@ -1,6 +1,7 @@
 package io.github.donald_okara.precover.gradle
 
 import org.gradle.api.Action
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
@@ -14,6 +15,16 @@ abstract class PrecoverRootExtension @Inject constructor(objects: ObjectFactory)
      * If total coverage falls below this, precoverAggregateCheck will fail.
      */
     abstract val aggregateCoverageThreshold: Property<Float>
+
+    /**
+     * File to store and read baseline coverage scores.
+     */
+    abstract val baselineFile: RegularFileProperty
+
+    /**
+     * Whether to use recorded baselines as an alternative to the hard threshold.
+     */
+    abstract val useBaseline: Property<Boolean>
 
     /**
      * Whether to generate an aggregated HTML report at the root level.

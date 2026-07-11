@@ -1,0 +1,16 @@
+{
+    "baselines": {
+        ":aggregate": [
+            {
+                "score": 96.296295,
+                "timestamp": 1783804600730
+            }
+        ],
+        ":app": [
+            {
+                "score": 96.296295,
+                "timestamp": 1783804600757
+            }
+        ]
+    }
+}

@@ -1,5 +1,6 @@
 package io.github.donald_okara.precover.gradle.tasks
 
+import io.github.donald_okara.precover.core.models.BaselineData
 import io.github.donald_okara.precover.core.models.ComposableMetadata
 import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleEngine
@@ -30,6 +31,17 @@ abstract class PrecoverCheckTask : DefaultTask() {
     @get:Input
     abstract val ruleOverrides: MapProperty<RuleType, RuleOverride>
 
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val baselineFile: RegularFileProperty
+
+    @get:Input
+    abstract val modulePath: Property<String>
+
+    @get:Input
+    abstract val useBaseline: Property<Boolean>
+
     @TaskAction
     fun run() {
         val json = Json { ignoreUnknownKeys = true }
@@ -47,14 +59,41 @@ abstract class PrecoverCheckTask : DefaultTask() {
         val currentExcludedRatio = if (totalComponents > 0) excludedComponents.toFloat() / totalComponents else 0f
         val maxRatio = maxExcludedRatio.get()
 
+        val baselineScore = if (useBaseline.get()) getBaselineScore() else null
+
         if (currentScore < targetThreshold) {
-            throw GradleException("Precover: Coverage score (${"%.1f".format(currentScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%)")
+            if (baselineScore != null && currentScore >= baselineScore) {
+                logger.lifecycle("Precover: Coverage score (${"%.1f".format(currentScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%) but meets baseline (${"%.1f".format(baselineScore)}%).")
+            } else {
+                val message = if (baselineScore != null) {
+                    "Precover: Coverage score (${"%.1f".format(currentScore)}%) is below both threshold (${"%.1f".format(targetThreshold)}%) and baseline (${"%.1f".format(baselineScore)}%)"
+                } else if (useBaseline.get()) {
+                    "Precover: Coverage score (${"%.1f".format(currentScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%) and no baseline found"
+                } else {
+                    "Precover: Coverage score (${"%.1f".format(currentScore)}%) is below threshold (${"%.1f".format(targetThreshold)}%)"
+                }
+                throw GradleException(message)
+            }
         }
 
         if (currentExcludedRatio > maxRatio) {
             throw GradleException("Precover: Excluded components ratio (${"%.1f".format(currentExcludedRatio * 100)}%) exceeds maximum allowed (${"%.1f".format(maxRatio * 100)}%)")
         }
 
-        logger.lifecycle("Precover: Coverage check passed! (Score: ${"%.1f".format(currentScore)}% >= ${"%.1f".format(targetThreshold)}%, Excluded: ${"%.1f".format(currentExcludedRatio * 100)}% <= ${"%.1f".format(maxRatio * 100)}%)")
+        logger.lifecycle("Precover: Coverage check passed! (Score: ${"%.1f".format(currentScore)}% >= ${if (baselineScore != null && currentScore < targetThreshold) "baseline %.1f".format(baselineScore) else "threshold %.1f".format(targetThreshold)}%, Excluded: ${"%.1f".format(currentExcludedRatio * 100)}% <= ${"%.1f".format(maxRatio * 100)}%)")
+    }
+
+    private fun getBaselineScore(): Float? {
+        val file = baselineFile.orNull?.asFile ?: return null
+        if (!file.exists()) return null
+
+        return try {
+            val json = Json { ignoreUnknownKeys = true }
+            val data = json.decodeFromString(BaselineData.serializer(), file.readText())
+            data.baselines[modulePath.get()]?.lastOrNull()?.score
+        } catch (e: Exception) {
+            logger.warn("Precover: Failed to parse baseline file: ${e.message}")
+            null
+        }
     }
 }

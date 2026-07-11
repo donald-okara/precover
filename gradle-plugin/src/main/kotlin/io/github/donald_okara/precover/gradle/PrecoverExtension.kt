@@ -4,6 +4,7 @@ import io.github.donald_okara.precover.core.models.RuleType
 import io.github.donald_okara.precover.rules.engine.RuleWeight
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -19,6 +20,16 @@ abstract class PrecoverExtension @Inject constructor(objects: ObjectFactory) {
      * Minimum coverage threshold (0-100) for this module.
      */
     abstract val coverageThreshold: Property<Float>
+
+    /**
+     * File to store and read baseline coverage scores.
+     */
+    abstract val baselineFile: RegularFileProperty
+
+    /**
+     * Whether to use recorded baselines as an alternative to the hard threshold.
+     */
+    abstract val useBaseline: Property<Boolean>
 
     /**
      * Maximum allowed ratio of excluded components (0.0 to 1.0).

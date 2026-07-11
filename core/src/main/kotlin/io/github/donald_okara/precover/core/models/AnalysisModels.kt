@@ -49,3 +49,14 @@ data class ModuleCoverage(
     val componentCount: Int,
     val reportPath: String? = null,
 )
+
+@Serializable
+data class BaselineData(
+    val baselines: Map<String, List<BaselineEntry>> = emptyMap(),
+)
+
+@Serializable
+data class BaselineEntry(
+    val score: Float,
+    val timestamp: Long,
+)

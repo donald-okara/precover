@@ -1,8 +1,6 @@
 package io.github.donald_okara.precover.gradle
 
-import io.github.donald_okara.precover.gradle.tasks.PrecoverAggregateCheckTask
-import io.github.donald_okara.precover.gradle.tasks.PrecoverAggregateReportTask
-import io.github.donald_okara.precover.gradle.tasks.PrecoverReportTask
+import io.github.donald_okara.precover.gradle.tasks.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
@@ -28,6 +26,8 @@ class PrecoverRootPlugin : Plugin<Project> {
         extension.aggregateCoverageThreshold.convention(80f)
         extension.htmlReportEnabled.convention(true)
         extension.jsonReportEnabled.convention(true)
+        extension.baselineFile.convention(rootProject.layout.projectDirectory.file("precover/baselines.json"))
+        extension.useBaseline.convention(true)
 
         val aggregateReportTask = rootProject.tasks.register("precoverAggregateReport", PrecoverAggregateReportTask::class.java) {
             it.group = "verification"
@@ -39,8 +39,22 @@ class PrecoverRootPlugin : Plugin<Project> {
 
         val aggregateCheckTask = rootProject.tasks.register("precoverAggregateCheck", PrecoverAggregateCheckTask::class.java) {
             it.group = "verification"
-            it.description = "Checks aggregate Precover coverage against threshold"
+            it.description = "Checks aggregate Precover coverage against threshold or baseline"
             it.threshold.set(extension.aggregateCoverageThreshold)
+            it.baselineFile.set(extension.baselineFile)
+            it.useBaseline.set(extension.useBaseline)
+        }
+
+        val aggregateUpdateBaselineTask = rootProject.tasks.register("precoverAggregateUpdateBaseline", PrecoverAggregateUpdateBaselineTask::class.java) {
+            it.group = "verification"
+            it.description = "Updates the project aggregate Precover coverage baseline"
+            it.baselineFile.set(extension.baselineFile)
+        }
+
+        val updateBaselineTask = rootProject.tasks.register("precoverUpdateBaseline") {
+            it.group = "verification"
+            it.description = "Updates Precover coverage baselines for all modules and the project aggregate"
+            it.dependsOn(aggregateUpdateBaselineTask)
         }
 
         rootProject.subprojects { subproject ->
@@ -82,7 +96,12 @@ class PrecoverRootPlugin : Plugin<Project> {
                 val subExtension = subproject.extensions.getByType(PrecoverExtension::class.java)
                 extension.getSubprojectsAction()?.execute(subExtension)
 
+                // Root baseline file should be the default for subprojects if not explicitly set
+                subExtension.baselineFile.convention(extension.baselineFile)
+                subExtension.useBaseline.convention(extension.useBaseline)
+
                 val reportTaskProvider = subproject.tasks.named("precoverReport", PrecoverReportTask::class.java)
+                val updateBaselineTaskProvider = subproject.tasks.named("precoverUpdateBaseline", PrecoverUpdateBaselineTask::class.java)
 
                 reportTaskProvider.configure { reportTask ->
                     // Force JSON output for aggregation to work
@@ -97,6 +116,15 @@ class PrecoverRootPlugin : Plugin<Project> {
                 aggregateCheckTask.configure {
                     it.dependsOn(reportTaskProvider)
                     it.inputReports.from(reportTaskProvider.flatMap { it.outputDirectory.file("precover-report.json") })
+                }
+
+                aggregateUpdateBaselineTask.configure {
+                    it.dependsOn(reportTaskProvider)
+                    it.inputReports.from(reportTaskProvider.flatMap { it.outputDirectory.file("precover-report.json") })
+                }
+
+                updateBaselineTask.configure {
+                    it.dependsOn(updateBaselineTaskProvider)
                 }
             }
         }
