@@ -1,46 +1,32 @@
-import io.github.donald_okara.precover.rules.engine.RuleWeight
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
+    alias(libs.plugins.google.devtools.ksp)
 }
 
-if (project.findProperty("precover.enabled") != "false") {
-    // Note: The root plugin applies this automatically now.
-    // We only use this block for overrides if needed.
+// Precover configuration is now managed globally in the root build.gradle.kts
+// using the precoverRoot.subprojects block. This avoids compilation errors
+// when the plugin is disabled.
+//
+// If we want module-specific overrides without static imports and remaining 
+// robust when the plugin is disabled, we can use this pattern:
+pluginManager.withPlugin("io.github.donald-okara.precover") {
+    val extension = extensions.getByName("precover")
     try {
-        val extension = extensions.getByName("precover")
-        val clz = extension::class.java
+        val clz = extension.javaClass
+        
+        // coverageThreshold.set(75f)
         (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
+
+        // THEME_COVERAGE { enable() } - Overriding the root disable
+        clz.getMethod("THEME_COVERAGE", org.gradle.api.Action::class.java).invoke(extension, object : org.gradle.api.Action<Any> {
+            override fun execute(ruleConfig: Any) {
+                ruleConfig.javaClass.getMethod("enable").invoke(ruleConfig)
+            }
+        })
     } catch (e: Exception) {
-        // Plugin not built yet or not applied
-    }
-}
-
-
-precover {
-    // Threshold for precoverCheck task (0-100)
-    coverageThreshold.set(80f)
-    // Maximum allowed ratio of excluded components (0.0 to 1.0)
-    maxExcludedRatio.set(0.2f)
-    // Enable/Disable report formats
-    htmlReportEnabled.set(true)
-    jsonReportEnabled.set(true)
-
-    // Configure rules using DSL labels
-    PREVIEW_PRESENCE {
-        enable()
-        mandatory()
-    }
-
-    THEME_COVERAGE {
-        disable()
-    }
-
-    FONT_SCALE_COVERAGE {
-        enable()
-        weight.set(RuleWeight.MEDIUM)
+        // Fallback for bootstrap
     }
 }
 

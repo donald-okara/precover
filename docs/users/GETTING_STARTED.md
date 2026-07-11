@@ -70,11 +70,12 @@ dependencies {
 ```
 
 ## 4. Configure Precover
-Customize the behavior using the `precover` extension in your module-level build scripts:
+Customize the behavior using the `precover` extension in your module-level build scripts, or globally in the root script.
+
+### Using the DSL (Recommended)
+You don't need to import any Precover classes to configure rules. Use the built-in helper methods:
 
 ```kotlin
-import io.github.donald_okara.precover.rules.engine.RuleWeight
-
 precover {
     // Threshold for precoverCheck task (0-100)
     coverageThreshold.set(80f)
@@ -96,7 +97,23 @@ precover {
 
     FONT_SCALE_COVERAGE {
         enable()
-        weight.set(RuleWeight.MEDIUM)
+        medium() // Options: mandatory(), high(), medium(), low()
+    }
+}
+```
+
+### Global Configuration
+For multi-module projects, you can configure all modules from your root `build.gradle.kts` using the `subprojects` block inside `precoverRoot`:
+
+```kotlin
+precoverRoot {
+    aggregateCoverageThreshold.set(85f)
+
+    subprojects {
+        coverageThreshold.set(80f)
+        PREVIEW_PRESENCE {
+            mandatory()
+        }
     }
 }
 ```

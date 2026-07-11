@@ -130,9 +130,55 @@ if (isPrecoverEnabled) {
 
     val extension = extensions.getByName("precoverRoot")
     try {
-        val method = extension::class.java.getMethod("getAggregateCoverageThreshold")
-        val property = method.invoke(extension) as org.gradle.api.provider.Property<Float>
-        property.set(80f)
+        val clz = extension.javaClass
+        
+        // aggregateCoverageThreshold.set(80f)
+        val getThreshold = clz.getMethod("getAggregateCoverageThreshold")
+        (getThreshold.invoke(extension) as org.gradle.api.provider.Property<Float>).set(80f)
+
+        // subprojects { ... }
+        val subprojectsMethod = clz.getDeclaredMethod("subprojects", org.gradle.api.Action::class.java)
+        subprojectsMethod.invoke(extension, object : org.gradle.api.Action<Any> {
+            override fun execute(subExtension: Any) {
+                try {
+                    val subClz = subExtension.javaClass
+                    
+                    // coverageThreshold.set(80f)
+                    (subClz.getMethod("getCoverageThreshold").invoke(subExtension) as org.gradle.api.provider.Property<Float>).set(80f)
+                    
+                    // maxExcludedRatio.set(0.2f)
+                    (subClz.getMethod("getMaxExcludedRatio").invoke(subExtension) as org.gradle.api.provider.Property<Float>).set(0.2f)
+
+                    // PREVIEW_PRESENCE { enable(); mandatory() }
+                    subClz.getMethod("PREVIEW_PRESENCE", org.gradle.api.Action::class.java).invoke(subExtension, object : org.gradle.api.Action<Any> {
+                        override fun execute(ruleConfig: Any) {
+                            val ruleClz = ruleConfig.javaClass
+                            ruleClz.getMethod("enable").invoke(ruleConfig)
+                            ruleClz.getMethod("mandatory").invoke(ruleConfig)
+                        }
+                    })
+
+                    // THEME_COVERAGE { disable() }
+                    subClz.getMethod("THEME_COVERAGE", org.gradle.api.Action::class.java).invoke(subExtension, object : org.gradle.api.Action<Any> {
+                        override fun execute(ruleConfig: Any) {
+                            val ruleClz = ruleConfig.javaClass
+                            ruleClz.getMethod("disable").invoke(ruleConfig)
+                        }
+                    })
+
+                    // FONT_SCALE_COVERAGE { enable(); medium() }
+                    subClz.getMethod("FONT_SCALE_COVERAGE", org.gradle.api.Action::class.java).invoke(subExtension, object : org.gradle.api.Action<Any> {
+                        override fun execute(ruleConfig: Any) {
+                            val ruleClz = ruleConfig.javaClass
+                            ruleClz.getMethod("enable").invoke(ruleConfig)
+                            ruleClz.getMethod("medium").invoke(ruleConfig)
+                        }
+                    })
+                } catch (e: Exception) {
+                    // Ignore subproject config errors
+                }
+            }
+        })
     } catch (e: Exception) {
         // Plugin not built yet
     }

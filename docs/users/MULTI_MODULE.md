@@ -13,7 +13,7 @@ The Root Plugin (`precover.root`) performs the following actions:
 
 ## Root Configuration
 
-Configure global project settings in your root `build.gradle.kts`:
+Configure global project settings and default subproject behavior in your root `build.gradle.kts`:
 
 ```kotlin
 precoverRoot {
@@ -23,6 +23,16 @@ precoverRoot {
     // Global report settings
     htmlReportEnabled.set(true)
     jsonReportEnabled.set(true)
+
+    // Configure all Precover-enabled subprojects at once
+    subprojects {
+        coverageThreshold.set(80f)
+        
+        PREVIEW_PRESENCE {
+            enable()
+            mandatory()
+        }
+    }
 }
 ```
 

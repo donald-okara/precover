@@ -55,8 +55,11 @@ class PrecoverRootPlugin : Plugin<Project> {
             subproject.plugins.withId("com.android.application", androidPluginHandler)
             subproject.plugins.withId("com.android.library", androidPluginHandler)
 
-            // Link submodule report to root aggregation lazily for any project with the plugin
+            // Apply global configuration from precoverRoot.subprojects
             subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
+                val subExtension = subproject.extensions.getByType(PrecoverExtension::class.java)
+                extension.getSubprojectsAction()?.execute(subExtension)
+
                 val reportTaskProvider = subproject.tasks.named("precoverReport", PrecoverReportTask::class.java)
 
                 reportTaskProvider.configure { reportTask ->
