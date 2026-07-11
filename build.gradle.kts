@@ -41,31 +41,27 @@ val localProperties =
 allprojects {
     version = projectVersion
 
-    // Map local.properties to the expected Vanniktech property names
-    localProperties.forEach { (key, value) ->
-        val stringKey = key.toString()
-        val stringValue = value.toString()
-        when (stringKey) {
-            "ossrhUsername" -> {
-                extra.set("mavenCentralUsername", stringValue)
-            }
+    // Map properties (from local.properties or project properties) to the expected Vanniktech property names
+    val propertiesToMap = listOf(
+        "ossrhUsername" to "mavenCentralUsername",
+        "ossrhPassword" to "mavenCentralPassword",
+        "signingKey" to "signingInMemoryKey",
+        "signingPassword" to "signingInMemoryKeyPassword"
+    )
 
-            "ossrhPassword" -> {
-                extra.set("mavenCentralPassword", stringValue)
-            }
-
-            "signingKey" -> {
-                val decodedKey =
-                    String(
-                        java.util.Base64
-                            .getDecoder()
-                            .decode(stringValue.trim()),
-                    )
-                extra.set("signingInMemoryKey", decodedKey)
-            }
-
-            "signingPassword" -> {
-                extra.set("signingInMemoryKeyPassword", stringValue)
+    propertiesToMap.forEach { (source, target) ->
+        val value = project.findProperty(source)?.toString() ?: localProperties.getProperty(source)
+        if (value != null) {
+            if (source == "signingKey") {
+                try {
+                    val decodedKey = String(java.util.Base64.getDecoder().decode(value.trim()))
+                    extra.set(target, decodedKey)
+                } catch (e: Exception) {
+                    // If not base64, assume it's the raw key
+                    extra.set(target, value)
+                }
+            } else {
+                extra.set(target, value)
             }
         }
     }
