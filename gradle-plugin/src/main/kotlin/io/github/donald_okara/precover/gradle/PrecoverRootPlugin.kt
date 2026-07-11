@@ -34,12 +34,22 @@ class PrecoverRootPlugin : Plugin<Project> {
         }
 
         rootProject.subprojects { subproject ->
-            // Use withId to avoid afterEvaluate where possible
             val androidPluginHandler = { _: Any ->
                 // Automatically apply the base plugin if not already present
                 if (!subproject.plugins.hasPlugin("io.github.donald-okara.precover")) {
                     subproject.plugins.apply("io.github.donald-okara.precover")
                 }
+
+                // Automatically apply KSP if not already present
+                if (!subproject.plugins.hasPlugin("com.google.devtools.ksp")) {
+                    subproject.plugins.apply("com.google.devtools.ksp")
+                }
+
+                // Add dependencies
+                val version = rootProject.version.toString()
+                subproject.dependencies.add("implementation", "io.github.donald-okara:core:$version")
+                subproject.dependencies.add("ksp", "io.github.donald-okara:ksp:$version")
+                Unit
             }
 
             subproject.plugins.withId("com.android.application", androidPluginHandler)

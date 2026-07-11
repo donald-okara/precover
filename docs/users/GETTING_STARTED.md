@@ -2,14 +2,31 @@
 
 Precover is a static analysis and reporting tool for Jetpack Compose that evaluates preview coverage quality across themes, font scales, and screen sizes.
 
-## 1. Apply the Plugin
+## 1. Setup Version Catalog
 
-### For Multi-Module Projects (Recommended)
-The easiest way to use Precover in a repository with multiple modules is to apply the root plugin in your root-level `build.gradle.kts`:
+The recommended way to use Precover is via a version catalog. Add the following to your `gradle/libs.versions.toml`:
+
+```toml
+[versions]
+precover = "0.1.0" # Use the latest version
+
+[libraries]
+precover-core = { group = "io.github.donald-okara", name = "core", version.ref = "precover" }
+precover-ksp = { group = "io.github.donald-okara", name = "ksp", version.ref = "precover" }
+
+[plugins]
+precover-root = { id = "io.github.donald-okara.precover.root", version.ref = "precover" }
+precover = { id = "io.github.donald-okara.precover", version.ref = "precover" }
+```
+
+## 2. Apply the Plugin
+
+### Multi-Module and Single-Module Projects (Recommended)
+Apply the root plugin in your root-level `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("io.github.donald-okara.precover.root") version "1.0.0"
+    alias(libs.plugins.precover.root)
 }
 
 precoverRoot {
@@ -20,30 +37,40 @@ precoverRoot {
 
 The root plugin will automatically:
 - Detect all Android Application and Library modules.
-- Apply the Precover analysis plugin to them.
+- Apply the KSP plugin and Precover analysis plugin to them.
+- Add the necessary `core` and `ksp` dependencies.
 - Aggregate all results into a single project-wide dashboard.
 
-### For Single Module Projects
-Apply the plugin in your module-level `build.gradle.kts` (usually `:app`):
+### Manual Application (Optional)
+If you want more control, you can apply the analysis plugin manually to specific modules:
 
 ```kotlin
 plugins {
     id("com.google.devtools.ksp")
-    id("io.github.donald-okara.precover")
+    alias(libs.plugins.precover)
+}
+
+dependencies {
+    implementation(libs.precover.core)
+    ksp(libs.precover.ksp)
 }
 ```
 
-## 2. Add KSP Dependency
-Regardless of how you apply the plugin, you must add the Precover KSP processor to the dependencies of any module containing Composables:
+## 3. Add Dependencies (Optional)
+The root plugin **automatically** adds the necessary Precover KSP processor and core library to all your Android modules. You don't need to add them manually!
+
+However, if you have non-Android Kotlin modules or want to use a specific version, you can still add them:
 
 ```kotlin
+// module-level build.gradle.kts
 dependencies {
-    "ksp"(project(":ksp")) // Replace with "io.github.donald-okara:precover-ksp:1.0.0" when published
+    implementation(libs.precover.core)
+    ksp(libs.precover.ksp)
 }
 ```
 
-## 3. Configure Precover
-Customize the behavior using the `precover` extension:
+## 4. Configure Precover
+Customize the behavior using the `precover` extension in your module-level build scripts:
 
 ```kotlin
 import io.github.donald_okara.precover.rules.engine.RuleWeight
@@ -59,22 +86,22 @@ precover {
 
     // Configure rules using DSL labels
     PREVIEW_PRESENCE {
-        enabled.set(true)
-        weight.set(RuleWeight.MANDATORY)
+        enable()
+        mandatory()
     }
 
     THEME_COVERAGE {
-        enabled.set(false)
+        disable()
     }
 
     FONT_SCALE_COVERAGE {
-        enabled.set(true)
+        enable()
         weight.set(RuleWeight.MEDIUM)
     }
 }
 ```
 
-## 4. Available Tasks
+## 5. Available Tasks
 
 ### Project Level (Root)
 - `precoverAggregateReport`: Generates a project-wide coverage dashboard in `build/reports/precover/aggregate/`.

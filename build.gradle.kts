@@ -1,10 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+val projectVersion = project.findProperty("precover.version")?.toString() ?: "1.0.1-SNAPSHOT"
 val isPrecoverEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
 buildscript {
-    val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+    val projectVersion = project.findProperty("precover.version")?.toString() ?: "1.0.1-SNAPSHOT"
     val isEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
     repositories {

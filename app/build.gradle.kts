@@ -1,22 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
 }
 
 if (project.findProperty("precover.enabled") != "false") {
-    // Note: The root plugin applies this, but we apply it here too for safety/clarity
-    // or if the root plugin isn't applied.
+    // Note: The root plugin applies this automatically now.
+    // We only use this block for overrides if needed.
     try {
-        apply(plugin = "io.github.donald-okara.precover")
         val extension = extensions.getByName("precover")
         val clz = extension::class.java
         (clz.getMethod("getCoverageThreshold").invoke(extension) as org.gradle.api.provider.Property<Float>).set(75f)
-        (clz.getMethod("getHtmlReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
-        (clz.getMethod("getJsonReportEnabled").invoke(extension) as org.gradle.api.provider.Property<Boolean>).set(true)
     } catch (e: Exception) {
-        // Plugin not built yet
+        // Plugin not built yet or not applied
     }
 }
 
@@ -101,6 +97,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     "ksp"(libs.androidx.room.compiler)
     "ksp"(libs.moshi.kotlin.codegen)
-    implementation(project(":core"))
-    "ksp"(project(":ksp"))
 }
