@@ -63,6 +63,9 @@ abstract class PrecoverExtension @Inject constructor(objects: ObjectFactory) {
     fun SCREEN_SIZE_COVERAGE(action: Action<RuleConfig>) = rule(RuleType.SCREEN_SIZE_COVERAGE, action)
     fun SCREEN_SIZE_COVERAGE(action: RuleConfig.() -> Unit) = rule(RuleType.SCREEN_SIZE_COVERAGE, action)
 
+    fun SCENARIO_COVERAGE(action: Action<RuleConfig>) = rule(RuleType.SCENARIO_COVERAGE, action)
+    fun SCENARIO_COVERAGE(action: RuleConfig.() -> Unit) = rule(RuleType.SCENARIO_COVERAGE, action)
+
     // Standard lowercase versions
     fun previewPresence(action: Action<RuleConfig>) = PREVIEW_PRESENCE(action)
     fun previewPresence(action: RuleConfig.() -> Unit) = PREVIEW_PRESENCE(action)
@@ -78,6 +81,9 @@ abstract class PrecoverExtension @Inject constructor(objects: ObjectFactory) {
 
     fun screenSizeCoverage(action: Action<RuleConfig>) = SCREEN_SIZE_COVERAGE(action)
     fun screenSizeCoverage(action: RuleConfig.() -> Unit) = SCREEN_SIZE_COVERAGE(action)
+
+    fun scenarioCoverage(action: Action<RuleConfig>) = SCENARIO_COVERAGE(action)
+    fun scenarioCoverage(action: RuleConfig.() -> Unit) = SCENARIO_COVERAGE(action)
 }
 
 abstract class RuleConfig @Inject constructor(private val ruleName: String) {

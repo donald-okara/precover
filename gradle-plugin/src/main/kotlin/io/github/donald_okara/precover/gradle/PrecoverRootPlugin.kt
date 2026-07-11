@@ -46,9 +46,8 @@ class PrecoverRootPlugin : Plugin<Project> {
                 }
 
                 // Add dependencies
-                val version = rootProject.version.toString()
-                subproject.dependencies.add("implementation", "io.github.donald-okara:core:$version")
-                subproject.dependencies.add("ksp", "io.github.donald-okara:ksp:$version")
+                subproject.dependencies.add("implementation", subproject.project(":core"))
+                subproject.dependencies.add("ksp", subproject.project(":ksp"))
                 Unit
             }
 

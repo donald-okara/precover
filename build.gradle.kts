@@ -185,6 +185,18 @@ if (isPrecoverEnabled) {
                                 }
                             },
                         )
+
+                        // SCENARIO_COVERAGE { enable(); mandatory() }
+                        subClz.getMethod("SCENARIO_COVERAGE", org.gradle.api.Action::class.java).invoke(
+                            subExtension,
+                            object : org.gradle.api.Action<Any> {
+                                override fun execute(ruleConfig: Any) {
+                                    val ruleClz = ruleConfig.javaClass
+                                    ruleClz.getMethod("enable").invoke(ruleConfig)
+                                    ruleClz.getMethod("mandatory").invoke(ruleConfig)
+                                }
+                            },
+                        )
                     } catch (e: Exception) {
                         // Ignore subproject config errors
                     }

@@ -82,6 +82,10 @@ class ProfileStateProvider : PrecoverPreviewParameterProvider<ProfileUiState>() 
             PreviewScenario.ERROR,
             ProfileUiState(error = "Failed to load profile"),
         ),
+        scenario(
+            PreviewScenario.EMPTY,
+            ProfileUiState(name = "New User", email = "new@example.com"),
+        ),
     )
 }
 
