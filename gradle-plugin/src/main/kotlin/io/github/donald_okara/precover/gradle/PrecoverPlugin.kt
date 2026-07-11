@@ -38,7 +38,7 @@ class PrecoverPlugin : Plugin<Project> {
 
         extension.rules.all { rule ->
             rule.enabled.convention(true)
-            rule.weight.convention(RuleWeight.MEDIUM) 
+            rule.weight.convention(RuleWeight.MEDIUM)
         }
 
         val ruleOverridesProvider = project.provider {

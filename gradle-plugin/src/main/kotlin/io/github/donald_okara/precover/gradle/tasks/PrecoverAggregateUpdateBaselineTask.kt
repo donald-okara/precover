@@ -22,7 +22,7 @@ abstract class PrecoverAggregateUpdateBaselineTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val json = Json { 
+        val json = Json {
             prettyPrint = true
             ignoreUnknownKeys = true
             encodeDefaults = true
@@ -66,11 +66,11 @@ abstract class PrecoverAggregateUpdateBaselineTask : DefaultTask() {
             val updatedBaselines = baselineData.baselines.toMutableMap()
             updatedBaselines[path] = history
             val updatedData = baselineData.copy(baselines = updatedBaselines)
-            
+
             baselineFileHandle.writeText(json.encodeToString(BaselineData.serializer(), updatedData))
             logger.lifecycle("Precover: Updated aggregate baseline to ${"%.1f".format(aggregateScore)}% (was ${if (lastScore >= 0) "%.1f".format(lastScore) else "none"}%)")
         } else if (aggregateScore == lastScore) {
-             logger.lifecycle("Precover: Project aggregate score is equal to baseline (${"%.1f".format(aggregateScore)}%). No update needed.")
+            logger.lifecycle("Precover: Project aggregate score is equal to baseline (${"%.1f".format(aggregateScore)}%). No update needed.")
         } else {
             logger.lifecycle("Precover: Project aggregate score (${"%.1f".format(aggregateScore)}%) is lower than baseline (${"%.1f".format(lastScore)}%). Skipping update.")
         }

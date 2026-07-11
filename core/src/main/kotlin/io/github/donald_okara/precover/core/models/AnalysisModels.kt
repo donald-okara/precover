@@ -52,11 +52,11 @@ data class ModuleCoverage(
 
 @Serializable
 data class BaselineData(
-    val baselines: Map<String, List<BaselineEntry>> = emptyMap()
+    val baselines: Map<String, List<BaselineEntry>> = emptyMap(),
 )
 
 @Serializable
 data class BaselineEntry(
     val score: Float,
-    val timestamp: Long
+    val timestamp: Long,
 )

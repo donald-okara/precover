@@ -95,7 +95,7 @@ class PrecoverRootPlugin : Plugin<Project> {
             subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
                 val subExtension = subproject.extensions.getByType(PrecoverExtension::class.java)
                 extension.getSubprojectsAction()?.execute(subExtension)
-                
+
                 // Root baseline file should be the default for subprojects if not explicitly set
                 subExtension.baselineFile.convention(extension.baselineFile)
                 subExtension.useBaseline.convention(extension.useBaseline)
