@@ -30,9 +30,12 @@ jobs:
 
       - name: Calculate Version
         id: get_version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            VERSION=${{ github.ref_name }}
+          if [ "$REF_TYPE" = "tag" ]; then
+            VERSION="$REF_NAME"
             # Remove leading 'v' if present
             VERSION=${VERSION#v}
           else

@@ -1,10 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-val projectVersion = project.findProperty("precover.version")?.toString() ?: "1.0.1-SNAPSHOT"
-val isPrecoverEnabled = project.findProperty("precover.enabled")?.toString() != "false"
-
 buildscript {
     val projectVersion = project.findProperty("precover.version")?.toString() ?: "1.0.1-SNAPSHOT"
+    extra.set("precoverVersion", projectVersion)
     val isEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
     repositories {
@@ -18,6 +16,9 @@ buildscript {
         }
     }
 }
+
+val projectVersion = extra["precoverVersion"].toString()
+val isPrecoverEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -137,7 +138,7 @@ if (isPrecoverEnabled) {
         (getThreshold.invoke(extension) as org.gradle.api.provider.Property<Float>).set(80f)
 
         // subprojects { ... }
-        val subprojectsMethod = clz.getDeclaredMethod("subprojects", org.gradle.api.Action::class.java)
+        val subprojectsMethod = clz.getMethod("subprojects", org.gradle.api.Action::class.java)
         subprojectsMethod.invoke(
             extension,
             object : org.gradle.api.Action<Any> {
@@ -198,13 +199,13 @@ if (isPrecoverEnabled) {
                             },
                         )
                     } catch (e: Exception) {
-                        // Ignore subproject config errors
+                        project.logger.warn("Precover subproject configuration failed: ${e.message}", e)
                     }
                 }
             },
         )
     } catch (e: Exception) {
-        // Plugin not built yet
+        project.logger.warn("Precover configuration failed: ${e.message}", e)
     }
 }
 

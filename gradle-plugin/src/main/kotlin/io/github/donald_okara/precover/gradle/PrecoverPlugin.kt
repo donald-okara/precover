@@ -9,7 +9,17 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
 
+/**
+ * Analysis plugin for Precover that evaluates Composable preview coverage for a single module.
+ *
+ * This plugin sets up tasks for generating individual module reports and checking
+ * coverage against a threshold. It is typically applied to Android application
+ * and library modules.
+ */
 class PrecoverPlugin : Plugin<Project> {
+    /**
+     * Applies the analysis plugin to the specified [project].
+     */
     override fun apply(project: Project) {
         val extension = project.extensions.create("precover", PrecoverExtension::class.java)
 

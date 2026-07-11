@@ -8,7 +8,7 @@ The recommended way to use Precover is via a version catalog. Add the following 
 
 ```toml
 [versions]
-precover = "0.1.0" # Use the latest version
+precover = "1.0.1-SNAPSHOT" # Use the latest version
 
 [libraries]
 precover-core = { group = "io.github.donald-okara", name = "core", version.ref = "precover" }

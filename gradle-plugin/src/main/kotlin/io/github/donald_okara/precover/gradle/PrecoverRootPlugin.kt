@@ -7,7 +7,17 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 
+/**
+ * Root plugin for Precover that orchestrates aggregate reporting and global configuration.
+ *
+ * This plugin should be applied to the root project. It automatically configures
+ * Android subprojects with the Precover analysis plugin, sets up KSP, and adds
+ * required dependencies.
+ */
 class PrecoverRootPlugin : Plugin<Project> {
+    /**
+     * Applies the root plugin to the specified [rootProject].
+     */
     override fun apply(rootProject: Project) {
         if (rootProject != rootProject.rootProject) {
             rootProject.logger.warn("Precover: The root plugin should only be applied to the root project.")

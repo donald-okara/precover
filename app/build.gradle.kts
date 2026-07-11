@@ -29,7 +29,7 @@ pluginManager.withPlugin("io.github.donald-okara.precover") {
             },
         )
     } catch (e: Exception) {
-        // Fallback for bootstrap
+        project.logger.warn("Precover configuration failed: ${e.message}", e)
     }
 }
 

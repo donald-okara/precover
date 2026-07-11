@@ -5,6 +5,9 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
+/**
+ * Configuration options for the Precover root plugin.
+ */
 abstract class PrecoverRootExtension @Inject constructor(objects: ObjectFactory) {
     /**
      * Minimum aggregate coverage threshold for the entire project.
