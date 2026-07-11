@@ -22,9 +22,12 @@ plugins {
     alias(libs.plugins.vanniktech.maven.publish) apply false
 }
 
-val gitVersion: Provider<String> = providers.exec {
-    commandLine("git", "describe", "--tags", "--always", "--dirty")
-}.standardOutput.asText.map { it.trim().removePrefix("v") }
+val gitVersion: Provider<String> =
+    providers
+        .exec {
+            commandLine("git", "describe", "--tags", "--always", "--dirty")
+        }.standardOutput.asText
+        .map { it.trim().removePrefix("v") }
 
 allprojects {
     version = gitVersion.getOrElse("0.1.0-SNAPSHOT")
@@ -38,25 +41,40 @@ tasks.register("printVersion") {
 }
 
 // Load credentials from local.properties if they exist
-val localProperties = java.util.Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) {
-        file.inputStream().use { load(it) }
+val localProperties =
+    java.util.Properties().apply {
+        val file = rootProject.file("local.properties")
+        if (file.exists()) {
+            file.inputStream().use { load(it) }
+        }
     }
-}
 
 // Map local.properties to the expected Vanniktech property names
 localProperties.forEach { (key, value) ->
     val stringKey = key.toString()
     val stringValue = value.toString()
     when (stringKey) {
-        "ossrhUsername" -> extra.set("mavenCentralUsername", stringValue)
-        "ossrhPassword" -> extra.set("mavenCentralPassword", stringValue)
+        "ossrhUsername" -> {
+            extra.set("mavenCentralUsername", stringValue)
+        }
+
+        "ossrhPassword" -> {
+            extra.set("mavenCentralPassword", stringValue)
+        }
+
         "signingKey" -> {
-            val decodedKey = String(java.util.Base64.getDecoder().decode(stringValue.trim()))
+            val decodedKey =
+                String(
+                    java.util.Base64
+                        .getDecoder()
+                        .decode(stringValue.trim()),
+                )
             extra.set("signingInMemoryKey", decodedKey)
         }
-        "signingPassword" -> extra.set("signingInMemoryKeyPassword", stringValue)
+
+        "signingPassword" -> {
+            extra.set("signingInMemoryKeyPassword", stringValue)
+        }
     }
 }
 

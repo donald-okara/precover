@@ -8,7 +8,7 @@ mavenPublishing {
     coordinates(
         groupId = "io.github.donald-okara",
         artifactId = "ksp",
-        version = project.version.toString()
+        version = project.version.toString(),
     )
 
     pom {
@@ -37,7 +37,9 @@ mavenPublishing {
     }
 
     publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.S01)
-    signAllPublications()
+    if (project.findProperty("signingInMemoryKey") != null) {
+        signAllPublications()
+    }
 }
 
 dependencies {
