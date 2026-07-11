@@ -1,9 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+val isPrecoverEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
 buildscript {
     val projectVersion = project.findProperty("precover.version")?.toString() ?: "0.1.0-SNAPSHOT"
+    val isEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
     repositories {
         mavenLocal()
@@ -11,7 +13,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        if (project.findProperty("precover.enabled") != "false") {
+        if (isEnabled) {
             classpath("io.github.donald-okara:gradle-plugin:$projectVersion")
         }
     }
@@ -69,6 +71,46 @@ allprojects {
     }
 }
 
+subprojects {
+    plugins.withType<com.vanniktech.maven.publish.MavenPublishPlugin> {
+        configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
+            coordinates(
+                groupId = "io.github.donald-okara",
+                artifactId = project.name,
+                version = projectVersion,
+            )
+
+            pom {
+                inceptionYear.set("2026")
+                url.set("https://github.com/donald-okara/precover")
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("donald-okara")
+                        name.set("Donald Isoe")
+                        url.set("https://github.com/donald-okara")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/donald-okara/precover")
+                    connection.set("scm:git:git://github.com/donald-okara/precover.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/donald-okara/precover.git")
+                }
+            }
+
+            publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+            if (project.findProperty("signingInMemoryKey") != null) {
+                signAllPublications()
+            }
+        }
+    }
+}
+
 tasks.register("printVersion") {
     val versionProvider = provider { project.version.toString() }
     doLast {
@@ -76,13 +118,13 @@ tasks.register("printVersion") {
     }
 }
 
-if (project.findProperty("precover.enabled") != "false") {
+if (isPrecoverEnabled) {
     apply(plugin = "io.github.donald-okara.precover.root")
 
     val extension = extensions.getByName("precoverRoot")
     try {
         val method = extension::class.java.getMethod("getAggregateCoverageThreshold")
-        val property = method.invoke(extension) as org.gradle.api.provider.Property<Float>
+        val property = method.invoke(extension) as Property<Float>
         property.set(80f)
     } catch (e: Exception) {
         // Plugin not built yet
