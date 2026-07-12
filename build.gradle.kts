@@ -77,9 +77,30 @@ allprojects {
             }
         }
     }
+
+    configurations.all {
+        resolutionStrategy.dependencySubstitution {
+            // Only substitute if the project exists AND it's one of ours
+            val precoverGroup = "io.github.donald-okara.precover"
+
+            rootProject.findProject(":core")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:core")).using(project(":core"))
+            }
+            rootProject.findProject(":ksp")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:ksp")).using(project(":ksp"))
+            }
+            rootProject.findProject(":rules")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:rules")).using(project(":rules"))
+            }
+            rootProject.findProject(":gradle-plugin")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:gradle-plugin")).using(project(":gradle-plugin"))
+            }
+        }
+    }
 }
 
 subprojects {
+    extra.set("isPrecoverModule", true)
     plugins.withType<com.vanniktech.maven.publish.MavenPublishPlugin> {
         configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
             coordinates(

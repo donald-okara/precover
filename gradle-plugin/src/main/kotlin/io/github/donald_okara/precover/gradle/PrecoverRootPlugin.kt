@@ -75,25 +75,18 @@ class PrecoverRootPlugin : Plugin<Project> {
 
                 // Add dependencies
                 val version = getPrecoverVersion(rootProject)
-                val isLocal = rootProject.findProperty("precover.local")?.toString() == "true" ||
-                    rootProject.name == "precover"
 
-                if (isLocal) {
-                    val coreProject = rootProject.findProject(":core")
-                    if (coreProject != null) {
-                        subproject.dependencies.add("implementation", coreProject)
-                    } else {
-                        subproject.dependencies.add("implementation", "io.github.donald-okara.precover:core:$version")
-                    }
-
-                    val kspProject = rootProject.findProject(":ksp")
-                    if (kspProject != null) {
-                        subproject.dependencies.add("ksp", kspProject)
-                    } else {
-                        subproject.dependencies.add("ksp", "io.github.donald-okara.precover:ksp:$version")
-                    }
+                val coreProject = rootProject.findProject(":core")?.takeIf { isPrecoverProject(it) }
+                if (coreProject != null) {
+                    subproject.dependencies.add("implementation", coreProject)
                 } else {
                     subproject.dependencies.add("implementation", "io.github.donald-okara.precover:core:$version")
+                }
+
+                val kspProject = rootProject.findProject(":ksp")?.takeIf { isPrecoverProject(it) }
+                if (kspProject != null) {
+                    subproject.dependencies.add("ksp", kspProject)
+                } else {
                     subproject.dependencies.add("ksp", "io.github.donald-okara.precover:ksp:$version")
                 }
                 Unit
@@ -149,10 +142,15 @@ class PrecoverRootPlugin : Plugin<Project> {
     private fun getPrecoverVersion(project: Project): String {
         val properties = Properties()
         val resource = javaClass.classLoader.getResourceAsStream("precover-version.properties")
-        if (resource != null) {
-            properties.load(resource)
+        resource?.use {
+            properties.load(it)
             return properties.getProperty("version") ?: project.version.toString()
         }
         return project.version.toString()
+    }
+
+    private fun isPrecoverProject(project: Project): Boolean {
+        return project.group == "io.github.donald-okara.precover" ||
+            project.hasProperty("isPrecoverModule")
     }
 }

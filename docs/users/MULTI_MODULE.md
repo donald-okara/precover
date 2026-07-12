@@ -5,7 +5,7 @@ Precover is designed to scale with large repositories. By using the `io.github.d
 
 ## How it Works
 
-The Root Plugin (`precover.root`) performs the following actions:
+The Root Plugin (`io.github.donald-okara.precover`) performs the following actions:
 
 1.  **Module Discovery**: It scans your project for subprojects applying `com.android.application` or `com.android.library`.
 2.  **Plugin Injection**: It automatically applies the `io.github.donald-okara.precover.module` plugin to those modules if they don't have it yet.
