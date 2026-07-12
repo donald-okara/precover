@@ -37,17 +37,21 @@ dependencies {
     testImplementation(libs.junit)
 }
 
-val generatePrecoverVersionProperties = tasks.register("generatePrecoverVersionProperties") {
-    val version = project.version.toString()
-    val outputDir = layout.buildDirectory.dir("generated/precover")
-    val outputFile = outputDir.map { it.file("precover-version.properties") }
-    inputs.property("version", version)
-    outputs.dir(outputDir)
-    doLast {
-        outputFile.get().asFile.parentFile.mkdirs()
-        outputFile.get().asFile.writeText("version=$version\n")
+val generatePrecoverVersionProperties =
+    tasks.register("generatePrecoverVersionProperties") {
+        val version = project.version.toString()
+        val outputDir = layout.buildDirectory.dir("generated/precover")
+        val outputFile = outputDir.map { it.file("precover-version.properties") }
+        inputs.property("version", version)
+        outputs.dir(outputDir)
+        doLast {
+            outputFile
+                .get()
+                .asFile.parentFile
+                .mkdirs()
+            outputFile.get().asFile.writeText("version=$version\n")
+        }
     }
-}
 
 sourceSets.main {
     resources.srcDir(generatePrecoverVersionProperties)

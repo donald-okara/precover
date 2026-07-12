@@ -127,7 +127,7 @@ tasks.register("printVersion") {
 }
 
 if (isPrecoverEnabled) {
-     apply(plugin = "io.github.donald-okara.precover")
+    apply(plugin = "io.github.donald-okara.precover")
 
     val extension = extensions.getByName("precoverRoot")
     try {

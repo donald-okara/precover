@@ -28,7 +28,7 @@ class PrecoverPluginTest {
 
         // Let's use a simpler approach: verify the version loading logic via a helper if possible,
         // or just mock the plugin application.
-        
+
         // Actually, we can just apply our plugin to the subproject and see if it was applied by root
         subproject.plugins.apply("io.github.donald-okara.precover.module")
         assertTrue(subproject.plugins.hasPlugin("io.github.donald-okara.precover.module"))
