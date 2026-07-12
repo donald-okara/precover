@@ -167,9 +167,6 @@ precover {
 
 You can easily integrate Precover into your GitHub Actions workflows to automate coverage checks and baseline updates.
 
-> [!IMPORTANT]
-> The workflow examples below contain a **"Publish to Maven Local (Dev Only)"** step. This is specific to the Precover repository's development environment. **When copying these workflows to your own project, you should remove this step and the `PRECOVER_LOCAL_DEV` environment variable.**
-
 ### 1. Precover Check Workflow
 This workflow runs on every pull request to ensure that the new changes meet the required coverage threshold or baseline.
 
