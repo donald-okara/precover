@@ -149,8 +149,6 @@ class PrecoverRootPlugin : Plugin<Project> {
         return project.version.toString()
     }
 
-    private fun isPrecoverProject(project: Project): Boolean {
-        return project.group == "io.github.donald-okara.precover" ||
-            project.hasProperty("isPrecoverModule")
-    }
+    private fun isPrecoverProject(project: Project): Boolean = project.group == "io.github.donald-okara.precover" ||
+        project.hasProperty("isPrecoverModule")
 }
