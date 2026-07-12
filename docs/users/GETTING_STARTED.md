@@ -12,12 +12,12 @@ The recommended way to use Precover is via a version catalog. Add the following 
 precover = "1.0.1-SNAPSHOT" # Use the latest version
 
 [libraries]
-precover-core = { group = "io.github.donald-okara", name = "core", version.ref = "precover" }
-precover-ksp = { group = "io.github.donald-okara", name = "ksp", version.ref = "precover" }
+precover-core = { group = "io.github.donald-okara", name = "core", version.ref = "precover" } # Optional
+precover-ksp = { group = "io.github.donald-okara", name = "ksp", version.ref = "precover" } # Optional
 
 [plugins]
 precover-root = { id = "io.github.donald-okara.precover.root", version.ref = "precover" }
-precover = { id = "io.github.donald-okara.precover", version.ref = "precover" }
+precover = { id = "io.github.donald-okara.precover", version.ref = "precover" } # Optional
 ```
 
 ## 2. Apply the Plugin

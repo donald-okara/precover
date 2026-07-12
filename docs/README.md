@@ -10,7 +10,9 @@ For developers integrating Precover into their apps.
 - [Scenario Coverage](users/SCENARIO_COVERAGE.md): Ensuring all UI states are previewed.
 - [Built-in Rules](users/RULES.md): Detailed explanation of coverage checks.
 
+## 🤖 AI Integration
+- [AI Skills](../skills/README.md): How to use AI to improve your Precover coverage.
+
 ## 🛠 Maintainer Documentation
 For contributors working on the Precover engine.
 - [Contributing Guide](maintainers/CONTRIBUTING.md): Architecture, workflow, and adding rules.
-- [Developer Guide](../DEVELOPER_GUIDE.md): Legacy overview (being deprecated).

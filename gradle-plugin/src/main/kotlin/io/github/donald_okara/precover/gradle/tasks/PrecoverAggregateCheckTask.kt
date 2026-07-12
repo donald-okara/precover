@@ -12,6 +12,12 @@ import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
+/**
+ * Task that verifies project-wide aggregate coverage against a threshold or baseline.
+ *
+ * It combines the results of all modules and checks if the project-wide weighted
+ * average meets the requirements defined in `precoverRoot`.
+ */
 abstract class PrecoverAggregateCheckTask : DefaultTask() {
 
     @get:InputFiles

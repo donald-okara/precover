@@ -13,6 +13,13 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.File
 
+import io.github.donald_okara.precover.gradle.PrecoverRootPlugin
+
+/**
+ * Task that aggregates reports from all subprojects into a single project-wide report.
+ *
+ * This task is usually registered by the [PrecoverRootPlugin] in the root project.
+ */
 @CacheableTask
 abstract class PrecoverAggregateReportTask : DefaultTask() {
 

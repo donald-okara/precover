@@ -11,6 +11,9 @@ import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Updating baseline is an explicit action that should always run when requested")
+/**
+ * Task that updates the aggregate baseline for the entire project.
+ */
 abstract class PrecoverAggregateUpdateBaselineTask : DefaultTask() {
 
     @get:InputFiles

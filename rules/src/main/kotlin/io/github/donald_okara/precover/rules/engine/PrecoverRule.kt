@@ -9,16 +9,19 @@ import java.io.Serializable
  * Defines the importance of a rule in the overall coverage score calculation.
  */
 enum class RuleWeight(val value: Int) : Serializable {
-    /** Minor suggestions, low impact on score. */
+    /** Minor suggestions. Low impact on the overall score. Useful for optional best practices. */
     LOW(1),
 
-    /** Standard checks. */
+    /** Standard check. Contributes moderately to the score. The default for most rules. */
     MEDIUM(2),
 
-    /** Important coverage requirements. */
+    /** Important coverage requirement. Significantly impacts the score if failed. */
     HIGH(3),
 
-    /** Critical checks. If a mandatory rule fails with an ERROR, the component score drops to 0. */
+    /**
+     * Critical check. If a mandatory rule fails, the component's coverage score
+     * will drop to 0% regardless of other rules.
+     */
     MANDATORY(5),
 }
 
