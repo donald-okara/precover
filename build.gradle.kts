@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    val projectVersion = project.findProperty("precover.version")?.toString() ?: "1.0.1-SNAPSHOT"
+    val projectVersion = project.findProperty("precover.version")?.toString() ?: "1.0.2"
     extra.set("precoverVersion", projectVersion)
     val isEnabled = project.findProperty("precover.enabled")?.toString() != "false"
 
@@ -12,7 +12,7 @@ buildscript {
     }
     dependencies {
         if (isEnabled) {
-            classpath("io.github.donald-okara:gradle-plugin:$projectVersion")
+            classpath("io.github.donald-okara.precover:gradle-plugin:$projectVersion")
         }
     }
 }
@@ -77,13 +77,34 @@ allprojects {
             }
         }
     }
+
+    configurations.all {
+        resolutionStrategy.dependencySubstitution {
+            // Only substitute if the project exists AND it's one of ours
+            val precoverGroup = "io.github.donald-okara.precover"
+
+            rootProject.findProject(":core")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:core")).using(project(":core"))
+            }
+            rootProject.findProject(":ksp")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:ksp")).using(project(":ksp"))
+            }
+            rootProject.findProject(":rules")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:rules")).using(project(":rules"))
+            }
+            rootProject.findProject(":gradle-plugin")?.takeIf { it.group == precoverGroup }?.let {
+                substitute(module("$precoverGroup:gradle-plugin")).using(project(":gradle-plugin"))
+            }
+        }
+    }
 }
 
 subprojects {
+    extra.set("isPrecoverModule", true)
     plugins.withType<com.vanniktech.maven.publish.MavenPublishPlugin> {
         configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
             coordinates(
-                groupId = "io.github.donald-okara",
+                groupId = "io.github.donald-okara.precover",
                 artifactId = project.name,
                 version = projectVersion,
             )
@@ -127,7 +148,7 @@ tasks.register("printVersion") {
 }
 
 if (isPrecoverEnabled) {
-    apply(plugin = "io.github.donald-okara.precover.root")
+    apply(plugin = "io.github.donald-okara.precover")
 
     val extension = extensions.getByName("precoverRoot")
     try {

@@ -15,11 +15,11 @@ mavenPublishing {
 gradlePlugin {
     plugins {
         create("precover") {
-            id = "io.github.donald-okara.precover"
+            id = "io.github.donald-okara.precover.module"
             implementationClass = "io.github.donald_okara.precover.gradle.PrecoverPlugin"
         }
         create("precoverRoot") {
-            id = "io.github.donald-okara.precover.root"
+            id = "io.github.donald-okara.precover"
             implementationClass = "io.github.donald_okara.precover.gradle.PrecoverRootPlugin"
         }
     }
@@ -35,4 +35,24 @@ dependencies {
     compileOnly("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.5")
 
     testImplementation(libs.junit)
+}
+
+val generatePrecoverVersionProperties =
+    tasks.register("generatePrecoverVersionProperties") {
+        val version = project.version.toString()
+        val outputDir = layout.buildDirectory.dir("generated/precover")
+        val outputFile = outputDir.map { it.file("precover-version.properties") }
+        inputs.property("version", version)
+        outputs.dir(outputDir)
+        doLast {
+            outputFile
+                .get()
+                .asFile.parentFile
+                .mkdirs()
+            outputFile.get().asFile.writeText("version=$version\n")
+        }
+    }
+
+sourceSets.main {
+    resources.srcDir(generatePrecoverVersionProperties)
 }

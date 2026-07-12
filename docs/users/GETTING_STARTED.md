@@ -1,5 +1,5 @@
 # Getting Started with Precover
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara.precover/core)](https://central.sonatype.com/artifact/io.github.donald-okara.precover/core)
 
 Precover is a static analysis and reporting tool for Jetpack Compose that evaluates preview coverage quality across themes, font scales, and screen sizes.
 
@@ -9,15 +9,15 @@ The recommended way to use Precover is via a version catalog. Add the following 
 
 ```toml
 [versions]
-precover = "1.0.1-SNAPSHOT" # Use the latest version
+precover = "1.0.2" # Use the latest version
 
 [libraries]
-precover-core = { group = "io.github.donald-okara", name = "core", version.ref = "precover" } # Optional
-precover-ksp = { group = "io.github.donald-okara", name = "ksp", version.ref = "precover" } # Optional
+precover-core = { group = "io.github.donald-okara.precover", name = "core", version.ref = "precover" } # Optional
+precover-ksp = { group = "io.github.donald-okara.precover", name = "ksp", version.ref = "precover" } # Optional
 
 [plugins]
-precover-root = { id = "io.github.donald-okara.precover.root", version.ref = "precover" }
-precover = { id = "io.github.donald-okara.precover", version.ref = "precover" } # Optional
+precover-root = { id = "io.github.donald-okara.precover", version.ref = "precover" }
+precover = { id = "io.github.donald-okara.precover.module", version.ref = "precover" } # Optional
 ```
 
 ## 2. Apply the Plugin
