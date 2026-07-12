@@ -29,6 +29,7 @@ import org.gradle.work.DisableCachingByDefault
 abstract class PrecoverCheckTask : DefaultTask() {
 
     @get:InputFile
+    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val metadataFile: RegularFileProperty
 
@@ -54,8 +55,14 @@ abstract class PrecoverCheckTask : DefaultTask() {
 
     @TaskAction
     fun run() {
+        val metadataFileHandle = metadataFile.orNull?.asFile
+        if (metadataFileHandle == null || !metadataFileHandle.exists()) {
+            logger.lifecycle("Precover: No metadata file found. Skipping coverage check for ${modulePath.get()}.")
+            return
+        }
+
         val json = Json { ignoreUnknownKeys = true }
-        val metadataContent = metadataFile.get().asFile.readText()
+        val metadataContent = metadataFileHandle.readText()
         val metadata = json.decodeFromString(ListSerializer(ComposableMetadata.serializer()), metadataContent)
 
         val engine = RuleEngine(overrides = ruleOverrides.get())

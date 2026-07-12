@@ -65,8 +65,6 @@ class PrecoverProcessor(
     }
 
     override fun finish() {
-        if (metadataList.isEmpty()) return
-
         // 1. Identify "Base" functions (actual components)
         val baseFunctions = metadataList.filter {
             !it.functionName.endsWith("Preview") &&
@@ -120,8 +118,6 @@ class PrecoverProcessor(
             base.copy(previews = expandedBasePreviews + attributedPreviews)
         }
 
-        if (finalMetadata.isEmpty()) return
-
         // 5. Include linked previews for linting/validation
         val linkedPreviews = previewFunctions.filter { it.linkTargets.isNotEmpty() }
         val allReportMetadata = finalMetadata + linkedPreviews
@@ -134,7 +130,7 @@ class PrecoverProcessor(
 
         try {
             val file = codeGenerator.createNewFile(
-                dependencies = Dependencies(true, *sources.toTypedArray()),
+                dependencies = if (sources.isEmpty()) Dependencies.ALL_FILES else Dependencies(true, *sources.toTypedArray()),
                 packageName = "io.github.donald_okara.precover",
                 fileName = "precover-metadata",
                 extensionName = "json",
