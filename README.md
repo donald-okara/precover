@@ -1,5 +1,8 @@
 # Precover
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara.precover/core)](https://central.sonatype.com/artifact/io.github.donald-okara.precover/core)
+[![Precover Check](https://github.com/donald-okara/precover/actions/workflows/precover_check.yml/badge.svg)](https://github.com/donald-okara/precover/actions/workflows/precover_check.yml)
+[![Lint Checks](https://github.com/donald-okara/precover/actions/workflows/lint.yml/badge.svg)](https://github.com/donald-okara/precover/actions/workflows/lint.yml)
+[![Publish](https://github.com/donald-okara/precover/actions/workflows/publish.yml/badge.svg)](https://github.com/donald-okara/precover/actions/workflows/publish.yml)
 
 Precover is a static analysis and reporting tool for Jetpack Compose that evaluates preview coverage quality across themes, font scales, and screen sizes.
 
