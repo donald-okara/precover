@@ -69,7 +69,11 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
         }
 
         if (modules.isEmpty()) {
-            throw GradleException("Precover: No module reports found to aggregate. Ensure Precover is applied and tasks are executed.")
+            if (inputReports.files.isEmpty()) {
+                throw GradleException("Precover: No module reports found to aggregate. Ensure Precover is applied and tasks are executed.")
+            } else {
+                throw GradleException("Precover: All found reports contain no components. Nothing to aggregate.")
+            }
         }
 
         val overallScore = modules.map { it.score }.average().toFloat()

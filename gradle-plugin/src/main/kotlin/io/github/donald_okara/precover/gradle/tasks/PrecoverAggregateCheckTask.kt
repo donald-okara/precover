@@ -52,6 +52,16 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
         if (scores.isEmpty()) {
             if (inputReports.files.isEmpty()) {
                 throw GradleException("Precover: No module reports found to check. Ensure Precover is applied and tasks are executed.")
+            } else if (inputReports.files.all { file ->
+                    try {
+                        val report = json.decodeFromString(CoverageReport.serializer(), file.readText())
+                        report.components.none { it.isComponent }
+                    } catch (_: Exception) {
+                        false
+                    }
+                }
+            ) {
+                throw GradleException("Precover: All found reports contain no components. Skipping aggregate check.")
             } else {
                 throw GradleException("Precover: All found reports failed to parse. Check logs for details.")
             }

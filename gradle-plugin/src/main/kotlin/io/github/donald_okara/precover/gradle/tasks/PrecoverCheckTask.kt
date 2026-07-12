@@ -78,7 +78,7 @@ abstract class PrecoverCheckTask : DefaultTask() {
         val targetThreshold = threshold.get()
 
         val excludedComponents = report.components.count { it.isComponent && it.isExcluded }
-        val currentExcludedRatio = if (totalComponents > 0) excludedComponents.toFloat() / totalComponents else 0f
+        val currentExcludedRatio = excludedComponents.toFloat() / totalComponents
         val maxRatio = maxExcludedRatio.get()
 
         val baselineScore = if (useBaseline.get()) getBaselineScore() else null

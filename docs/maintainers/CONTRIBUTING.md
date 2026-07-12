@@ -53,10 +53,22 @@ If you want to test your local changes in another project, publish with a specif
 Then, ensure your external project includes `mavenLocal()` in its repository sources and update the version to match:
 
 ```kotlin
-// In settings.gradle.kts or build.gradle.kts
-repositories {
-    mavenLocal()
-    mavenCentral()
+// In settings.gradle.kts
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        google()
+        mavenCentral()
+    }
 }
 ```
 

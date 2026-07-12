@@ -42,7 +42,10 @@ abstract class PrecoverAggregateUpdateBaselineTask : DefaultTask() {
             }
         }
 
-        if (scores.isEmpty()) return
+        if (scores.isEmpty()) {
+            logger.lifecycle("Precover: No component scores found. Skipping aggregate baseline update.")
+            return
+        }
 
         val aggregateScore = scores.average().toFloat()
         val path = ":aggregate"
