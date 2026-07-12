@@ -24,8 +24,8 @@ import javax.inject.Inject
 abstract class PrecoverRootExtension @Inject constructor(objects: ObjectFactory) {
     /**
      * Minimum aggregate coverage threshold (0-100) for the entire project.
-     * If the total weighted average coverage across all modules falls below this,
-     * the `precoverAggregateCheck` task will fail.
+     * Calculated as the unweighted mean of all module coverage scores.
+     * If this average falls below the threshold, the `precoverAggregateCheck` task will fail.
      */
     abstract val aggregateCoverageThreshold: Property<Float>
 
@@ -36,8 +36,9 @@ abstract class PrecoverRootExtension @Inject constructor(objects: ObjectFactory)
     abstract val baselineFile: RegularFileProperty
 
     /**
-     * Whether to use the recorded [baselineFile] as the aggregate success criterion
-     * instead of [aggregateCoverageThreshold].
+     * Whether to use the recorded [baselineFile] as a fallback success criterion.
+     * If true, `precoverAggregateCheck` will pass if the current aggregate score
+     * meets or exceeds the recorded baseline, even if it is below [aggregateCoverageThreshold].
      */
     abstract val useBaseline: Property<Boolean>
 

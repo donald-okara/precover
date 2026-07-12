@@ -14,8 +14,8 @@ import org.gradle.work.DisableCachingByDefault
 /**
  * Task that verifies project-wide aggregate coverage against a threshold or baseline.
  *
- * It combines the results of all modules and checks if the project-wide weighted
- * average meets the requirements defined in `precoverRoot`.
+ * It calculates the unweighted average of all module coverage scores and checks if
+ * it meets the requirements defined in `precoverRoot`.
  */
 @DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
 abstract class PrecoverAggregateCheckTask : DefaultTask() {

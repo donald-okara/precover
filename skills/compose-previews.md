@@ -36,10 +36,10 @@ annotation class StandardPreviews
 ```
 
 ### 3. State Management
-When a component has multiple states (Loading, Error, Success), use `PreviewParameterProvider` or multiple `@Preview` functions with `@Scenario` tags.
+When a component has multiple states (Loading, Error, Success), use `PrecoverPreviewParameterProvider` (for automatic scenario discovery) or multiple `@Preview` functions with explicit `@Scenario` tags.
 
 ### 4. Smart Exclusions
-If a component shouldn't be tracked (e.g., a tiny utility or internal wrapper), suggest:
+If a component shouldn't count toward the coverage score (e.g., a tiny utility or internal wrapper), suggest excluding it. It will still appear in reports as "Excluded" but won't impact the overall score.
 ```kotlin
 @PrecoverNoPreviewRequired
 @Composable

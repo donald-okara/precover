@@ -15,8 +15,7 @@ import java.io.File
 /**
  * Task that records the current coverage score as the new baseline for a module.
  *
- * This task should be run when you intentionally want to update the "acceptable"
- * coverage level for a module.
+ * It only updates the baseline if the current score exceeds the existing recorded baseline.
  */
 @DisableCachingByDefault(because = "Updating baseline is an explicit action that should always run when requested")
 abstract class PrecoverUpdateBaselineTask : DefaultTask() {

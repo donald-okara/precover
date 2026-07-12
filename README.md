@@ -12,7 +12,7 @@ Detailed documentation can be found in the [docs/](docs/README.md) directory:
 ## 🤖 AI Integration
 Precover is designed to work seamlessly with AI coding assistants. We provide a set of "skills" (prompts and context) to help AI agents assist you in improving your UI coverage.
 
-Check out the [skills/](skills/compose-previews.md) directory for more information.
+Check out the [AI Skills](skills/README.md) directory for more information.
 
 ## 🚀 Key Features
 - **Automated Coverage Analysis**: Detects missing previews for different themes, font scales, and devices.
