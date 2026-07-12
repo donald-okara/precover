@@ -1,7 +1,6 @@
 package io.github.donald_okara.precover.core
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-
 import io.github.donald_okara.precover.core.annotations.RequiresPreviewScenarios
 
 /**

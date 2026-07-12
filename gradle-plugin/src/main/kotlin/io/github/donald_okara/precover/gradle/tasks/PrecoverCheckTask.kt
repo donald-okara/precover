@@ -15,7 +15,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 
-@DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
 /**
  * Task that verifies if the current coverage meets the defined requirements.
  *
@@ -25,6 +24,7 @@ import org.gradle.work.DisableCachingByDefault
  *
  * It also verifies the [maxExcludedRatio] to prevent excessive use of `@PrecoverNoPreviewRequired`.
  */
+@DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
 abstract class PrecoverCheckTask : DefaultTask() {
 
     @get:InputFile

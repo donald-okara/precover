@@ -63,8 +63,10 @@ data class RuleViolation(
 enum class Severity {
     /** A suggestion for improvement with no impact on the pass/fail status. */
     INFO,
+
     /** A recommended check that might affect the score but won't fail the build unless threshold is high. */
     WARNING,
+
     /** A critical failure that usually drops the component score to 0 or fails mandatory rules. */
     ERROR,
 }

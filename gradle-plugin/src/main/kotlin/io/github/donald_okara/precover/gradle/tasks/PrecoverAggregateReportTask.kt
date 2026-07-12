@@ -3,6 +3,7 @@ package io.github.donald_okara.precover.gradle.tasks
 import io.github.donald_okara.precover.core.models.AggregateCoverageReport
 import io.github.donald_okara.precover.core.models.CoverageReport
 import io.github.donald_okara.precover.core.models.ModuleCoverage
+import io.github.donald_okara.precover.gradle.PrecoverRootPlugin
 import io.github.donald_okara.precover.rules.report.AggregateHtmlReporter
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
@@ -12,8 +13,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import java.io.File
-
-import io.github.donald_okara.precover.gradle.PrecoverRootPlugin
 
 /**
  * Task that aggregates reports from all subprojects into a single project-wide report.

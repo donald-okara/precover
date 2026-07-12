@@ -20,7 +20,7 @@ import javax.inject.Inject
  * precover {
  *     coverageThreshold.set(90f)
  *     htmlReportEnabled.set(true)
- *     
+ *
  *     rules {
  *         THEME_COVERAGE {
  *             high()
@@ -100,34 +100,40 @@ abstract class PrecoverExtension @Inject constructor(objects: ObjectFactory) {
     }
 
     // DSL Labels for all available rules
-    
+
     /** Configures the 'Preview Presence' rule. */
     fun PREVIEW_PRESENCE(action: Action<RuleConfig>) = rule(RuleType.PREVIEW_PRESENCE, action)
+
     /** Configures the 'Preview Presence' rule. */
     fun PREVIEW_PRESENCE(action: RuleConfig.() -> Unit) = rule(RuleType.PREVIEW_PRESENCE, action)
 
     /** Configures the 'PrecoverLink Usage' rule. */
     fun PRECOVER_LINK_USAGE(action: Action<RuleConfig>) = rule(RuleType.PRECOVER_LINK_USAGE, action)
+
     /** Configures the 'PrecoverLink Usage' rule. */
     fun PRECOVER_LINK_USAGE(action: RuleConfig.() -> Unit) = rule(RuleType.PRECOVER_LINK_USAGE, action)
 
     /** Configures the 'Theme Coverage' rule (Light/Dark mode). */
     fun THEME_COVERAGE(action: Action<RuleConfig>) = rule(RuleType.THEME_COVERAGE, action)
+
     /** Configures the 'Theme Coverage' rule (Light/Dark mode). */
     fun THEME_COVERAGE(action: RuleConfig.() -> Unit) = rule(RuleType.THEME_COVERAGE, action)
 
     /** Configures the 'Font Scale Coverage' rule. */
     fun FONT_SCALE_COVERAGE(action: Action<RuleConfig>) = rule(RuleType.FONT_SCALE_COVERAGE, action)
+
     /** Configures the 'Font Scale Coverage' rule. */
     fun FONT_SCALE_COVERAGE(action: RuleConfig.() -> Unit) = rule(RuleType.FONT_SCALE_COVERAGE, action)
 
     /** Configures the 'Screen Size Coverage' rule. */
     fun SCREEN_SIZE_COVERAGE(action: Action<RuleConfig>) = rule(RuleType.SCREEN_SIZE_COVERAGE, action)
+
     /** Configures the 'Screen Size Coverage' rule. */
     fun SCREEN_SIZE_COVERAGE(action: RuleConfig.() -> Unit) = rule(RuleType.SCREEN_SIZE_COVERAGE, action)
 
     /** Configures the 'Scenario Coverage' rule. */
     fun SCENARIO_COVERAGE(action: Action<RuleConfig>) = rule(RuleType.SCENARIO_COVERAGE, action)
+
     /** Configures the 'Scenario Coverage' rule. */
     fun SCENARIO_COVERAGE(action: RuleConfig.() -> Unit) = rule(RuleType.SCENARIO_COVERAGE, action)
 

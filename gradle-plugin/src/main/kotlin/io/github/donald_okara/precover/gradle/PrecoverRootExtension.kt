@@ -13,7 +13,7 @@ import javax.inject.Inject
  * ```kotlin
  * precoverRoot {
  *     aggregateCoverageThreshold.set(85f)
- *     
+ *
  *     subprojects {
  *         // Global configuration for all modules
  *         coverageThreshold.set(80f)
