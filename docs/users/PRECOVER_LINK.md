@@ -1,4 +1,5 @@
 # Using @PrecoverLink
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
 
 The `@PrecoverLink` annotation is the primary way to connect your `@Preview` functions to the `@Composable` components they test.
 

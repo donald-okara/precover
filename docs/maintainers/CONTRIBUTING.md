@@ -1,4 +1,5 @@
 # Contributing to Precover
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
 
 ## Project Structure
 - `:core`: Shared data models used by KSP, Rules, and the Plugin.

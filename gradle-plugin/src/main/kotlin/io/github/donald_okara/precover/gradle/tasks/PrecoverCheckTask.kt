@@ -15,6 +15,16 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 
+/**
+ * Task that verifies if the current coverage meets the defined requirements.
+ *
+ * It checks the generated report against:
+ * 1. A static [threshold].
+ * 2. A recorded [baselineFile] (used as a fallback if [useBaseline] is true and the threshold is not met).
+ *
+ * It also verifies the [maxExcludedRatio] (ratio of components excluded via annotations like
+ * `@PrecoverNoPreviewRequired`) relative to the total number of components.
+ */
 @DisableCachingByDefault(because = "Check tasks with no outputs are not cacheable")
 abstract class PrecoverCheckTask : DefaultTask() {
 

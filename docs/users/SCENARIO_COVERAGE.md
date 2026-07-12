@@ -1,4 +1,5 @@
 # Preview Scenario Coverage
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
 
 Precover allows you to enforce coverage for specific UI scenarios (e.g., Loading, Error, Success) to ensure your components are fully tested across all states.
 

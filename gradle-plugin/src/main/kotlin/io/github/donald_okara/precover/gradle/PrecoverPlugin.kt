@@ -11,11 +11,14 @@ import org.gradle.api.Project
 import java.io.File
 
 /**
- * Analysis plugin for Precover that evaluates Composable preview coverage for a single module.
+ * The core Precover plugin that performs analysis on a single Android module.
  *
- * This plugin sets up tasks for generating individual module reports and checking
- * coverage against a threshold. It is typically applied to Android application
- * and library modules.
+ * When applied, this plugin:
+ * 1. Creates the `precover` extension for configuration.
+ * 2. Registers tasks for generating reports and checking coverage.
+ * 3. Configures KSP to use the Precover processor.
+ *
+ * This plugin is typically applied automatically to subprojects by the [PrecoverRootPlugin].
  */
 class PrecoverPlugin : Plugin<Project> {
     /**

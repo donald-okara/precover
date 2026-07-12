@@ -1,4 +1,5 @@
 # Built-in Coverage Rules
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
 
 Precover comes with a set of built-in rules that evaluate the quality of your Compose Previews. Each rule has a **Weight** (impact on score) and a **Severity** (how critical a violation is).
 

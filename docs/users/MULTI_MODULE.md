@@ -1,4 +1,5 @@
 # Multi-Module Coverage Aggregation
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
 
 Precover is designed to scale with large repositories. By using the `io.github.donald-okara.precover.root` plugin, you can manage UI quality across dozens of modules from a single point.
 

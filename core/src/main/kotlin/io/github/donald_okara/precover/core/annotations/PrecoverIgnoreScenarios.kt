@@ -3,14 +3,18 @@ package io.github.donald_okara.precover.core.annotations
 /**
  * Excludes a `@Composable` from specific preview scenario validation.
  *
- * Example:
+ * This is useful when a component is marked with [RequiresPreviewScenarios] but certain
+ * states (like "Error" or "Empty") are intentionally omitted or handled elsewhere.
+ *
+ * ### Usage
  * ```kotlin
- * @PrecoverIgnoreScenarios(exclude = [PreviewScenario.LOADING])
+ * @PrecoverIgnoreScenarios(exclude = [PreviewScenario.ERROR])
  * @Composable
  * fun MyComponent() { ... }
  * ```
  *
- * If `exclude` is empty (default), all scenarios are ignored for this component.
+ * @property exclude An array of scenario names to ignore. If this array is empty (the default),
+ * **all** scenario validation is disabled for the annotated component.
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.BINARY)
