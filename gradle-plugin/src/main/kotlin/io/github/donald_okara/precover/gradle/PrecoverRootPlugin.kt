@@ -4,6 +4,7 @@ import io.github.donald_okara.precover.gradle.tasks.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import java.util.Properties
 
 /**
  * The root plugin for Precover that orchestrates aggregate reporting and global configuration.
@@ -63,8 +64,8 @@ class PrecoverRootPlugin : Plugin<Project> {
         rootProject.subprojects { subproject ->
             val androidPluginHandler = { _: Any ->
                 // Automatically apply the base plugin if not already present
-                if (!subproject.plugins.hasPlugin("io.github.donald-okara.precover")) {
-                    subproject.plugins.apply("io.github.donald-okara.precover")
+                if (!subproject.plugins.hasPlugin("io.github.donald-okara.precover.module")) {
+                    subproject.plugins.apply("io.github.donald-okara.precover.module")
                 }
 
                 // Automatically apply KSP if not already present
@@ -73,20 +74,27 @@ class PrecoverRootPlugin : Plugin<Project> {
                 }
 
                 // Add dependencies
-                val version = rootProject.version.toString()
+                val version = getPrecoverVersion(rootProject)
+                val isLocal = rootProject.findProperty("precover.local")?.toString() == "true" ||
+                    rootProject.name == "precover"
 
-                val coreProject = rootProject.findProject(":core")
-                if (coreProject != null) {
-                    subproject.dependencies.add("implementation", coreProject)
-                } else {
-                    subproject.dependencies.add("implementation", "io.github.donald-okara:core:$version")
-                }
+                if (isLocal) {
+                    val coreProject = rootProject.findProject(":core")
+                    if (coreProject != null) {
+                        subproject.dependencies.add("implementation", coreProject)
+                    } else {
+                        subproject.dependencies.add("implementation", "io.github.donald-okara.precover:core:$version")
+                    }
 
-                val kspProject = rootProject.findProject(":ksp")
-                if (kspProject != null) {
-                    subproject.dependencies.add("ksp", kspProject)
+                    val kspProject = rootProject.findProject(":ksp")
+                    if (kspProject != null) {
+                        subproject.dependencies.add("ksp", kspProject)
+                    } else {
+                        subproject.dependencies.add("ksp", "io.github.donald-okara.precover:ksp:$version")
+                    }
                 } else {
-                    subproject.dependencies.add("ksp", "io.github.donald-okara:ksp:$version")
+                    subproject.dependencies.add("implementation", "io.github.donald-okara.precover:core:$version")
+                    subproject.dependencies.add("ksp", "io.github.donald-okara.precover:ksp:$version")
                 }
                 Unit
             }
@@ -95,7 +103,7 @@ class PrecoverRootPlugin : Plugin<Project> {
             subproject.plugins.withId("com.android.library", androidPluginHandler)
 
             // Apply global configuration from precoverRoot.subprojects
-            subproject.pluginManager.withPlugin("io.github.donald-okara.precover") {
+            subproject.pluginManager.withPlugin("io.github.donald-okara.precover.module") {
                 val subExtension = subproject.extensions.getByType(PrecoverExtension::class.java)
                 extension.getSubprojectsAction()?.execute(subExtension)
 
@@ -136,5 +144,15 @@ class PrecoverRootPlugin : Plugin<Project> {
         rootProject.tasks.matching { it.name == "check" }.configureEach {
             it.dependsOn(aggregateCheckTask)
         }
+    }
+
+    private fun getPrecoverVersion(project: Project): String {
+        val properties = Properties()
+        val resource = javaClass.classLoader.getResourceAsStream("precover-version.properties")
+        if (resource != null) {
+            properties.load(resource)
+            return properties.getProperty("version") ?: project.version.toString()
+        }
+        return project.version.toString()
     }
 }

@@ -1,5 +1,5 @@
 # Preview Exclusions and Ignore Rules
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara.precover/core)](https://central.sonatype.com/artifact/io.github.donald-okara.precover/core)
 
 Not all Composables require full preview coverage. Precover provides a mechanism to exclude certain components or specific scenarios from enforcement, keeping your reports meaningful and reducing noise.
 

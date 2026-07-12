@@ -11,7 +11,7 @@ plugins {
 //
 // If we want module-specific overrides without static imports and remaining
 // robust when the plugin is disabled, we can use this pattern:
-pluginManager.withPlugin("io.github.donald-okara.precover") {
+pluginManager.withPlugin("io.github.donald-okara.precover.module") {
     val extension = extensions.getByName("precover")
     try {
         val clz = extension.javaClass

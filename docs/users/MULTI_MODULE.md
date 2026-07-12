@@ -1,14 +1,14 @@
 # Multi-Module Coverage Aggregation
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara.precover/core)](https://central.sonatype.com/artifact/io.github.donald-okara.precover/core)
 
-Precover is designed to scale with large repositories. By using the `io.github.donald-okara.precover.root` plugin, you can manage UI quality across dozens of modules from a single point.
+Precover is designed to scale with large repositories. By using the `io.github.donald-okara.precover.module` plugin, you can manage UI quality across dozens of modules from a single point.
 
 ## How it Works
 
 The Root Plugin (`precover.root`) performs the following actions:
 
 1.  **Module Discovery**: It scans your project for subprojects applying `com.android.application` or `com.android.library`.
-2.  **Plugin Injection**: It automatically applies the `io.github.donald-okara.precover` plugin to those modules if they don't have it yet.
+2.  **Plugin Injection**: It automatically applies the `io.github.donald-okara.precover.module` plugin to those modules if they don't have it yet.
 3.  **Task Orchestration**: It creates a dependency graph where the root-level aggregate tasks depend on the individual module analysis tasks.
 4.  **Data Aggregation**: It collects JSON metadata from each module's analysis to compute a project-wide score.
 
