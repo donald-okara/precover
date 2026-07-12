@@ -40,6 +40,12 @@ abstract class PrecoverUpdateBaselineTask : DefaultTask() {
 
         val reportContent = reportFile.get().asFile.readText()
         val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
+
+        if (report.components.none { it.isComponent }) {
+            logger.lifecycle("Precover: No components found in ${modulePath.get()}. Skipping baseline update.")
+            return
+        }
+
         val currentScore = report.overallScore
         val path = modulePath.get()
 

@@ -68,10 +68,15 @@ abstract class PrecoverCheckTask : DefaultTask() {
         val engine = RuleEngine(overrides = ruleOverrides.get())
         val report = engine.analyze(metadata)
 
+        val totalComponents = report.components.count { it.isComponent }
+        if (totalComponents == 0) {
+            logger.lifecycle("Precover: No components found in ${modulePath.get()}. Skipping coverage check.")
+            return
+        }
+
         val currentScore = report.overallScore
         val targetThreshold = threshold.get()
 
-        val totalComponents = report.components.count { it.isComponent }
         val excludedComponents = report.components.count { it.isComponent && it.isExcluded }
         val currentExcludedRatio = if (totalComponents > 0) excludedComponents.toFloat() / totalComponents else 0f
         val maxRatio = maxExcludedRatio.get()

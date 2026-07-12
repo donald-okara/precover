@@ -41,7 +41,8 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
         val scores = inputReports.files.mapNotNull { file ->
             try {
                 val reportContent = file.readText()
-                json.decodeFromString(CoverageReport.serializer(), reportContent).overallScore
+                val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
+                if (report.components.none { it.isComponent }) null else report.overallScore
             } catch (e: Exception) {
                 logger.warn("Precover: Failed to parse report ${file.path}: ${e.message}")
                 null

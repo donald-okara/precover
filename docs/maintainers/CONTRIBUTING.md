@@ -45,6 +45,21 @@ Before running reports, you must publish the latest version of the plugin and it
 ./gradlew :core:publishToMavenLocal :rules:publishToMavenLocal :ksp:publishToMavenLocal :gradle-plugin:publishToMavenLocal -Pprecover.enabled=false
 ```
 
+**Testing in an external project:**
+If you want to test your local changes in another project, publish with a specific version:
+```bash
+./gradlew publishToMavenLocal -Pprecover.version=1.0.3-SNAPSHOT -Pprecover.enabled=false
+```
+Then, ensure your external project includes `mavenLocal()` in its repository sources and update the version to match:
+
+```kotlin
+// In settings.gradle.kts or build.gradle.kts
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+```
+
 ### 2. Run Quality Checks & Reports
 Once published, you can run the full suite of checks and generate coverage reports for the `:app` module or the entire project:
 
