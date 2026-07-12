@@ -1,4 +1,5 @@
 # Precover Documentation
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.donald-okara/core)](https://central.sonatype.com/artifact/io.github.donald-okara/core)
 
 Welcome to the Precover documentation. Precover is a static analysis tool designed to ensure high-quality Compose Preview coverage.
 
