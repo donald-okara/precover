@@ -41,7 +41,8 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
         val scores = inputReports.files.mapNotNull { file ->
             try {
                 val reportContent = file.readText()
-                json.decodeFromString(CoverageReport.serializer(), reportContent).overallScore
+                val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
+                if (report.components.none { it.isComponent }) null else report.overallScore
             } catch (e: Exception) {
                 logger.warn("Precover: Failed to parse report ${file.path}: ${e.message}")
                 null
@@ -51,6 +52,16 @@ abstract class PrecoverAggregateCheckTask : DefaultTask() {
         if (scores.isEmpty()) {
             if (inputReports.files.isEmpty()) {
                 throw GradleException("Precover: No module reports found to check. Ensure Precover is applied and tasks are executed.")
+            } else if (inputReports.files.all { file ->
+                    try {
+                        val report = json.decodeFromString(CoverageReport.serializer(), file.readText())
+                        report.components.none { it.isComponent }
+                    } catch (_: Exception) {
+                        false
+                    }
+                }
+            ) {
+                throw GradleException("Precover: All found reports contain no components. Skipping aggregate check.")
             } else {
                 throw GradleException("Precover: All found reports failed to parse. Check logs for details.")
             }

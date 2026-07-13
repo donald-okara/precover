@@ -34,14 +34,18 @@ abstract class PrecoverAggregateUpdateBaselineTask : DefaultTask() {
         val scores = inputReports.files.mapNotNull { file ->
             try {
                 val reportContent = file.readText()
-                json.decodeFromString(CoverageReport.serializer(), reportContent).overallScore
+                val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
+                if (report.components.none { it.isComponent }) null else report.overallScore
             } catch (e: Exception) {
                 logger.warn("Precover: Failed to parse report ${file.path}: ${e.message}")
                 null
             }
         }
 
-        if (scores.isEmpty()) return
+        if (scores.isEmpty()) {
+            logger.lifecycle("Precover: No component scores found. Skipping aggregate baseline update.")
+            return
+        }
 
         val aggregateScore = scores.average().toFloat()
         val path = ":aggregate"

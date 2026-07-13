@@ -29,6 +29,7 @@ import java.io.File
 abstract class PrecoverReportTask : DefaultTask() {
 
     @get:InputFile
+    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val metadataFile: RegularFileProperty
 
@@ -49,15 +50,21 @@ abstract class PrecoverReportTask : DefaultTask() {
 
     @TaskAction
     fun run() {
+        val outDir = outputDirectory.get().asFile
+        if (!outDir.exists()) outDir.mkdirs()
+
+        val metadataFileHandle = metadataFile.orNull?.asFile
+        if (metadataFileHandle == null || !metadataFileHandle.exists()) {
+            logger.lifecycle("Precover: No metadata file found. Skipping report generation for ${modulePath.get()}.")
+            return
+        }
+
         val json = Json { ignoreUnknownKeys = true }
-        val metadataContent = metadataFile.get().asFile.readText()
+        val metadataContent = metadataFileHandle.readText()
         val metadata = json.decodeFromString(ListSerializer(ComposableMetadata.serializer()), metadataContent)
 
         val engine = RuleEngine(overrides = ruleOverrides.get())
         val report = engine.analyze(metadata).copy(modulePath = modulePath.get())
-
-        val outDir = outputDirectory.get().asFile
-        if (!outDir.exists()) outDir.mkdirs()
 
         if (jsonEnabled.get()) {
             val reportJson = Json {

@@ -45,6 +45,9 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
                 val reportContent = file.readText()
                 val report = json.decodeFromString(CoverageReport.serializer(), reportContent)
 
+                val componentCount = report.components.count { it.isComponent }
+                if (componentCount == 0) return@forEach
+
                 // Use module path from report if available, fallback to heuristic
                 val modulePath = report.modulePath ?: file.absolutePath
                     .substringAfter("/precover/")
@@ -56,7 +59,7 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
                     ModuleCoverage(
                         modulePath = modulePath,
                         score = report.overallScore,
-                        componentCount = report.components.size,
+                        componentCount = componentCount,
                         reportPath = "../../${file.parentFile.relativeTo(outputDirectory.get().asFile.parentFile.parentFile).path}/precover-report.html",
                     ),
                 )
@@ -66,7 +69,11 @@ abstract class PrecoverAggregateReportTask : DefaultTask() {
         }
 
         if (modules.isEmpty()) {
-            throw GradleException("Precover: No module reports found to aggregate. Ensure Precover is applied and tasks are executed.")
+            if (inputReports.files.isEmpty()) {
+                throw GradleException("Precover: No module reports found to aggregate. Ensure Precover is applied and tasks are executed.")
+            } else {
+                throw GradleException("Precover: All found reports contain no components. Nothing to aggregate.")
+            }
         }
 
         val overallScore = modules.map { it.score }.average().toFloat()

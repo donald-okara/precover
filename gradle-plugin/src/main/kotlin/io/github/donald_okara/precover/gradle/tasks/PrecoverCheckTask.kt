@@ -29,6 +29,7 @@ import org.gradle.work.DisableCachingByDefault
 abstract class PrecoverCheckTask : DefaultTask() {
 
     @get:InputFile
+    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val metadataFile: RegularFileProperty
 
@@ -54,19 +55,30 @@ abstract class PrecoverCheckTask : DefaultTask() {
 
     @TaskAction
     fun run() {
+        val metadataFileHandle = metadataFile.orNull?.asFile
+        if (metadataFileHandle == null || !metadataFileHandle.exists()) {
+            logger.lifecycle("Precover: No metadata file found. Skipping coverage check for ${modulePath.get()}.")
+            return
+        }
+
         val json = Json { ignoreUnknownKeys = true }
-        val metadataContent = metadataFile.get().asFile.readText()
+        val metadataContent = metadataFileHandle.readText()
         val metadata = json.decodeFromString(ListSerializer(ComposableMetadata.serializer()), metadataContent)
 
         val engine = RuleEngine(overrides = ruleOverrides.get())
         val report = engine.analyze(metadata)
 
+        val totalComponents = report.components.count { it.isComponent }
+        if (totalComponents == 0) {
+            logger.lifecycle("Precover: No components found in ${modulePath.get()}. Skipping coverage check.")
+            return
+        }
+
         val currentScore = report.overallScore
         val targetThreshold = threshold.get()
 
-        val totalComponents = report.components.count { it.isComponent }
         val excludedComponents = report.components.count { it.isComponent && it.isExcluded }
-        val currentExcludedRatio = if (totalComponents > 0) excludedComponents.toFloat() / totalComponents else 0f
+        val currentExcludedRatio = excludedComponents.toFloat() / totalComponents
         val maxRatio = maxExcludedRatio.get()
 
         val baselineScore = if (useBaseline.get()) getBaselineScore() else null
